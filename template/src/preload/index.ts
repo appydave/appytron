@@ -4,6 +4,10 @@ import { IPC, type AppInfo, type AppytronApi } from '../shared/ipc';
 const api: AppytronApi = {
   getAppInfo: (): Promise<AppInfo> => ipcRenderer.invoke(IPC.appInfo),
   ping: (message: string): Promise<string> => ipcRenderer.invoke(IPC.ping, message),
+  counter: {
+    get: (): Promise<number> => ipcRenderer.invoke(IPC.counterGet),
+    increment: (): Promise<number> => ipcRenderer.invoke(IPC.counterIncrement),
+  },
 };
 
 // The ONLY door: expose a minimal, typed API on window.appytron.

@@ -2,11 +2,13 @@ import { app } from 'electron';
 import { createLifecycle, createLogger, type Lifecycle, type Logger } from '@appydave/core';
 import { IpcRouter } from './ipc-router.js';
 import { WindowManager } from './window-manager.js';
+import { ProcessSupervisor } from './process-supervisor.js';
 
 export interface ConsoleContext {
   logger: Logger;
   windows: WindowManager;
   ipc: IpcRouter;
+  processes: ProcessSupervisor;
 }
 
 export interface Console extends ConsoleContext {
@@ -36,10 +38,12 @@ export function createConsole(options: CreateConsoleOptions): Console {
   const lifecycle = createLifecycle();
   const windows = new WindowManager();
   const ipc = new IpcRouter();
-  const ctx: ConsoleContext = { logger, windows, ipc };
+  const processes = new ProcessSupervisor();
+  const ctx: ConsoleContext = { logger, windows, ipc, processes };
 
   lifecycle.onStop(() => {
     ipc.dispose();
+    processes.stopAll();
   });
 
   return {

@@ -2,11 +2,12 @@ import { useEffect } from 'react';
 import { useAppStore } from './store';
 
 export default function App(): JSX.Element {
-  const { info, pong, loadInfo, sendPing } = useAppStore();
+  const { info, pong, count, loadInfo, sendPing, loadCount, increment } = useAppStore();
 
   useEffect(() => {
     void loadInfo();
-  }, [loadInfo]);
+    void loadCount();
+  }, [loadInfo, loadCount]);
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center p-8">
@@ -48,6 +49,23 @@ export default function App(): JSX.Element {
             Send ping
           </button>
           {pong && <p className="font-mono text-sm text-emerald-400">{pong}</p>}
+        </section>
+
+        <section className="space-y-3 rounded-lg border border-neutral-800 p-4">
+          <h2 className="text-sm font-medium">
+            Persistent counter · <span className="text-neutral-500">@appydave/core Store</span>
+          </h2>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void increment()}
+              className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium hover:bg-emerald-500"
+            >
+              Increment
+            </button>
+            <span className="font-mono text-lg">{count ?? '…'}</span>
+          </div>
+          <p className="text-xs text-neutral-500">Survives a restart — written to disk via Store.</p>
         </section>
       </div>
     </div>

@@ -7,6 +7,8 @@
 export const IPC = {
   appInfo: 'app:info',
   ping: 'app:ping',
+  counterGet: 'counter:get',
+  counterIncrement: 'counter:increment',
 } as const;
 
 export interface AppInfo {
@@ -22,4 +24,9 @@ export interface AppInfo {
 export interface AppytronApi {
   getAppInfo(): Promise<AppInfo>;
   ping(message: string): Promise<string>;
+  /** Persistent counter — proves @appydave/core Store survives restarts. */
+  counter: {
+    get(): Promise<number>;
+    increment(): Promise<number>;
+  };
 }
