@@ -69,6 +69,43 @@ describe('scaffold', () => {
     expect(b.scaffolded).toBe('2026-03-03T00:00:00Z');
   });
 
+  it('--link-core writes a file: link that resolves to the real core dir (G1)', async () => {
+    await scaffold({ templateDir: TEMPLATE, targetDir: target, appName: 'linked', linkCore: true });
+    const pkg = JSON.parse(await fs.readFile(join(target, 'package.json'), 'utf8'));
+    const dep = pkg.dependencies['@appydave/core'];
+    expect(dep.startsWith('file:')).toBe(true);
+    // the link, resolved from the target, must point at the actual @appydave/core package
+    const linked = resolve(target, dep.slice('file:'.length));
+    const realCore = resolve(TEMPLATE, '..', '..', 'appydave-foundation', 'packages', 'core');
+    expect(linked).toBe(realCore);
+    // the baseline records the link too
+    expect(JSON.parse(await fs.readFile(join(target, 'appytron.json'), 'utf8')).core).toBe(dep);
+  });
+
+  it('merge mode adds template files, skips collisions, never clobbers existing (G2)', async () => {
+    await fs.mkdir(join(target, 'docs'), { recursive: true });
+    await fs.writeFile(join(target, 'docs/keep.md'), 'KEEP');
+    await fs.writeFile(join(target, 'package.json'), '{"name":"pre-existing"}\n');
+
+    const res = await scaffold({ templateDir: TEMPLATE, targetDir: target, appName: 'merged', merge: true });
+
+    // template files added
+    await expect(fs.access(join(target, 'electron.vite.config.ts'))).resolves.toBeUndefined();
+    // existing docs untouched
+    expect(await fs.readFile(join(target, 'docs/keep.md'), 'utf8')).toBe('KEEP');
+    // existing package.json NOT clobbered, and reported as skipped
+    expect(JSON.parse(await fs.readFile(join(target, 'package.json'), 'utf8')).name).toBe('pre-existing');
+    expect(res.skipped).toContain('package.json');
+  });
+
+  it('merge --force overwrites colliding files', async () => {
+    await fs.mkdir(target, { recursive: true });
+    await fs.writeFile(join(target, 'package.json'), '{"name":"old"}\n');
+    await scaffold({ templateDir: TEMPLATE, targetDir: target, appName: 'forced', merge: true, force: true });
+    const pkg = JSON.parse(await fs.readFile(join(target, 'package.json'), 'utf8'));
+    expect(pkg.name).toBe('forced'); // template package.json copied + rewritten
+  });
+
   it('rewrites the createConsole app name in main/index.ts', async () => {
     await scaffold({ templateDir: TEMPLATE, targetDir: target, appName: 'zapp' });
     const main = await fs.readFile(join(target, 'src/main/index.ts'), 'utf8');
