@@ -1,6 +1,6 @@
 ---
 name: recipe
-description: Scaffold AppyTron capability patterns into this desktop app. Use when the developer says "recipe", "add a recipe", "wrap-cli", "wrap a CLI", "wrap the CLI", "landing page", "download page", "add nav shell", or "scaffold <feature>". Each recipe is a reference spec Claude reads, then builds into the running app to fit its current structure.
+description: Scaffold AppyTron capability patterns into this desktop app. Use when the developer says "recipe", "add a recipe", "wrap-cli", "wrap a CLI", "wrap the CLI", "landing page", "download page", "add nav shell", "webview harness", "embed a website", "drive a web app", "image harvest", "rate-limit guard", or "scaffold <feature>". Each recipe is a reference spec Claude reads, then builds into the running app to fit its current structure.
 ---
 
 # AppyTron Recipes
@@ -20,6 +20,9 @@ Tier-2 primitives in `src/main/` (`WindowManager`, `IpcRouter`, `Bridge`, `Proce
 | **ipc-crud** | Typed CRUD for an entity, local-first, over the IPC bridge | `references/ipc-crud.md` |
 | **wrap-cli** | Turn an off-the-shelf CLI into a native desktop console | `references/wrap-cli.md` |
 | **landing-page** | A branded landing + download page (the app's distribution surface) | `references/landing-page.md` |
+| **webview-harness** | Embed a logged-in remote web app; synthesized trusted input + DOM-read via a webview preload (no macOS grants) | `references/webview-harness.md` |
+| **image-harvest** | Download a resolved asset URL in-session → `FileAuthor` (named, scoped, committed, provenance) | `references/image-harvest.md` |
+| **rate-limit-guard** | Detect a provider's limit state → pause + notify (never spin blindly) | `references/rate-limit-guard.md` |
 
 ## How to run a recipe
 
