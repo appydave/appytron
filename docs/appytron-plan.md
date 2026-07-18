@@ -42,7 +42,7 @@ The three compose into one story: **AppySentinel observes, AppyStack shows it in
 - Not an "Eve agent console" — eve-studio is one *instance* of the class; AppyTron is the generic scaffold with none of the Eve/Vercel domain baked in.
 - Not a fork of anything.
 
-> **AppyTron stands on its own.** The "Drip" image tool (§13) is merely its *first example/consumer*
+> **AppyTron stands on its own.** The "ImageDrip" image tool (§13) is merely its *first example/consumer*
 > — a pilot that pressure-tests the recipes. It does **not** define AppyTron. Read the scaffold's
 > identity from this section, never from any single pilot.
 
@@ -284,11 +284,11 @@ most valuable output — the reason someone reaches for AppyTron at all:
 - `fleet-client` — read AppySentinel Access zones (the composition recipe; deferred per §14.5)
 - `packaging-macos` — electron-builder config, code signing, notarization
 
-**Forced by the first pilot ("Drip", see `docs/pilots/drip-plan.md`):**
-- `native-input` — inject keystrokes / paste into the frontmost app (macOS Accessibility)
-- `screen-capture` — region screenshot of a target area (macOS Screen Recording)
-- `screen-watch` / `vision-diff` — detect "done" from screenshot changes, local-only
-- `download-router` — watch a downloads dir, rename + route files into project dirs
+**Forced by the first pilot ("ImageDrip", see `docs/pilots/imagedrip-plan.md`):**
+- `webview-harness` — embed a session-partitioned remote web app; synthesized OS-level input (`sendInputEvent`) + DOM-read via a webview preload (no macOS Accessibility/Screen-Recording grants)
+- `dom-observe` — MutationObserver-in-webview → "done" + target element data back to main
+- `image-harvest` — fetch a resolved image URL in-session → `FileAuthor` → named + routed + provenance
+- `rate-limit-guard` — detect the provider's limit state → pause + notify
 - `human-cadence` — jittered timing engine + adaptive per-target pacing store
 
 ---
@@ -360,7 +360,7 @@ Neither parent covers this — it's AppyTron's own domain (AppyStack ships a Doc
 | **4 — agentic install** | Layer-2 `configure-appytron` skill + agentic handoff + seed recipe catalogue from Phase-5 pilot | Sentinel two-layer install |
 | **5 — packaging + pilot** | `packaging-macos` recipe (sign+notarize+update feed) + **first pilot app** proving the whole chain | eve-studio build pipeline |
 
-**First pilot: the "Drip" Image-Batch Console** → full spec in [`docs/pilots/drip-plan.md`](./pilots/drip-plan.md). A native operator console that drives ChatGPT's image UI (no paid API), vision-detects completion, and harvests/routes results — it exercises AppyTron's unique "mutating operator over local UI/processes/files" job and forces several new recipes (`native-input`, `screen-capture`, `screen-watch`, `download-router`, `human-cadence`). **Not needed to begin Phase 1** — the scaffold work is independent. Watchtower / switchboard remain later candidates.
+**First pilot: the "ImageDrip" Image-Batch Console** → full spec in [`docs/pilots/imagedrip-plan.md`](./pilots/imagedrip-plan.md). Its own scaffolded app + repo (`appydave/imagedrip`) — this file is a pointer. A native operator console that drives ChatGPT's image UI (no paid API) via **Approach C** (embedded webview host + synthesized input + DOM-read), harvests/routes results via `FileAuthor` — it exercises AppyTron's unique "mutating operator over local UI/processes/files" job and forces several new recipes (`webview-harness`, `dom-observe`, `image-harvest`, `rate-limit-guard`, `human-cadence`). **Not needed to begin Phase 1** — the scaffold work is independent. Watchtower / switchboard remain later candidates.
 
 ---
 
@@ -369,9 +369,9 @@ Neither parent covers this — it's AppyTron's own domain (AppyStack ships a Doc
 1. **Use-case boundary** — ✅ **Generic desktop scaffold with an operator-console flagship** (mirrors how AppyStack is generic). Not narrowed to agent-consoles.
 2. **Platform** — ✅ **macOS-first.** Windows/Linux via a later recipe, not v1.
 3. **Update feed** — ✅ **GitHub Releases** (electron-builder native provider; zero extra infra; matches the public `appydave/*` pattern).
-4. **First pilot** — ✅ **The "Drip" Image-Batch Console** → see [`docs/pilots/drip-plan.md`](./pilots/drip-plan.md). Not needed to start Phase 1; it pressure-tests the recipe catalogue.
-5. **Composition depth ("native cockpit over AppySentinel daemons")** — ✅ **Later concern, NOT v1.** The first pilot (Drip) drives *local* processes/UI/files and needs no `fleet-client`; defer that recipe until a fleet-cockpit pilot actually demands it (Sentinel rule: recipes are byproducts of pilots).
-6. **Shared foundation library** — ✅ **`@appydave/core`** (neutral name, no product prefix) holds the cross-boilerplate primitives (`Lifecycle`/`ConfigLoader`/`Logger`/`Store`). **Build now.** The tested code already exists in `@appydave/appysentinel-core` → extract from there. AppyTron is the first consumer; backfill AppyStack/AppySentinel onto it "as needed" (order = whatever's efficient). Target substantial completion **before Drip**. AppyTron stays **self-contained** — its Electron primitives are template source, not a published package; a future `@appydave/appytron-shell` is parked. (`appytron-config` may likewise collapse to `@appydave/config` — flagged, not decided.)
+4. **First pilot** — ✅ **The "ImageDrip" Image-Batch Console** → see [`docs/pilots/imagedrip-plan.md`](./pilots/imagedrip-plan.md). Not needed to start Phase 1; it pressure-tests the recipe catalogue.
+5. **Composition depth ("native cockpit over AppySentinel daemons")** — ✅ **Later concern, NOT v1.** The first pilot (ImageDrip) drives *local* processes/UI/files and needs no `fleet-client`; defer that recipe until a fleet-cockpit pilot actually demands it (Sentinel rule: recipes are byproducts of pilots).
+6. **Shared foundation library** — ✅ **`@appydave/core`** (neutral name, no product prefix) holds the cross-boilerplate primitives (`Lifecycle`/`ConfigLoader`/`Logger`/`Store`). **Build now.** The tested code already exists in `@appydave/appysentinel-core` → extract from there. AppyTron is the first consumer; backfill AppyStack/AppySentinel onto it "as needed" (order = whatever's efficient). Target substantial completion **before ImageDrip**. AppyTron stays **self-contained** — its Electron primitives are template source, not a published package; a future `@appydave/appytron-shell` is parked. (`appytron-config` may likewise collapse to `@appydave/config` — flagged, not decided.)
 
 ---
 
@@ -416,7 +416,7 @@ AppyDave (org)
 │       └── template/ carries AppyTron's OWN Electron primitives as SOURCE:
 │           WindowManager · IpcRouter · Bridge · ProcessSupervisor · FileAuthor · Updater · createConsole()
 └── APPS (Tier 3) ── produced BY the boilerplates
-    └── (appytron) ⭐ FIRST PILOT: "Drip" — image-batch console (drives ChatGPT UI, no API)
+    └── (appytron) ⭐ FIRST PILOT: "ImageDrip" — image-batch console (drives ChatGPT UI, no API)
 
   *  appystack: backfilled onto @appydave/core "as needed" (later).
      appysentinel-core: after extraction keeps only Sentinel-specific bits

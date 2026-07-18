@@ -178,7 +178,7 @@ supplied when a Developer ID is available. Auto-update reads the GitHub-Releases
 ~/dev/ad/apps/appytron/                 github.com/appydave/appytron    (public)
 ├── CONTEXT.md                          ← you are here
 ├── docs/appytron-plan.md               full design + all locked decisions
-├── docs/pilots/drip-plan.md            a pilot spec (business-agnostic)
+├── docs/pilots/imagedrip-plan.md       pointer → own repo (appydave/imagedrip)
 ├── docs/specs/signature-recipes-spec.md
 ├── template/                           the product (npm; the app you scaffold)
 │   ├── src/main | preload | renderer | shared
