@@ -183,40 +183,59 @@ Read `~/dev/upstream/repos/eve-studio` as a **reference blueprint** for *how a g
 
 ---
 
-## 6. Core Primitives — the `@appydave/appytron-core` package
+## 6. Primitives — two homes (Tier-1 shared vs Tier-2 AppyTron)
 
-Mirrors AppySentinel's "7 primitives + facade" shape. Ported items are marked.
+Per the three-tier decision (§14.6): the **cross-cutting** primitives live in the shared
+`@appydave/core` library (neutral name — shared by all AppyDave boilerplates); the
+**Electron-specific** primitives are AppyTron's own, carried as **template source**. AppyTron is a
+self-contained app — *only the shared foundation is a published library.*
+
+### Tier 1 — `@appydave/core` (shared foundation · published · NO product prefix)
+The commonality across all AppyDave boilerplates (Stack / Sentinel / Tron). This code **already
+exists and is tested** inside `@appydave/appysentinel-core` — extract it here (don't rewrite).
 
 | Primitive | Purpose | Origin |
 |-----------|---------|--------|
-| `Lifecycle` | start/stop hook harness for the main process | **port from Sentinel** |
-| `ConfigLoader` | defaults→file→env, Zod, reloadable | **port from Sentinel** |
-| `Logger` | Pino structured logging | **port from Sentinel** |
-| `Store` | local-first persistence (atomic JSON default; SQLite recipe) | atomicWrite + SerialQueue **from Sentinel** |
+| `Lifecycle` | start/stop hook harness | from `appysentinel-core` |
+| `ConfigLoader` | defaults→file→env, Zod, reloadable | from `appysentinel-core` |
+| `Logger` | Pino structured logging | from `appysentinel-core` |
+| `Store` | atomic local persistence (atomicWrite + SerialQueue) | from `appysentinel-core` |
+
+Runtime deps: `pino`, `zod`, `ulid`. **No Electron.** Fully Vitest-unit-testable.
+
+### Tier 2 — AppyTron's own primitives (template source · Electron-bound)
+Baked into the AppyTron app, depending on `@appydave/core`. **Not** a published library — a future
+`@appydave/appytron-shell` extraction is *parked* until a second consumer earns it.
+
+| Primitive | Purpose | Origin |
+|-----------|---------|--------|
+| `WindowManager` | native windows, tray, menu | new |
 | `IpcRouter` | typed channel registry, validate-then-dispatch | new (eve-studio pattern) |
 | `Bridge` | preload `contextBridge` exposer, minimal typed API | new (eve-studio pattern) |
-| `WindowManager` | create/track/restore native windows, tray, menu | new |
-| `ProcessSupervisor` | spawn / adopt / monitor / stream-logs of local child processes | new (eve-studio `agentManager` pattern) |
-| `FileAuthor` | path-scoped, git-committed file writes (revert point per change) | new (eve-studio's best pattern) |
-| `Updater` | electron-updater wiring + signature-verified feed | new (eve-studio pattern, feed decoupled) |
-| `createConsole()` | facade wiring all of the above into one object | **Sentinel's `createSentinel` shape** |
+| `ProcessSupervisor` | spawn / adopt / monitor / stream-logs of local processes | new (eve-studio `agentManager` pattern) |
+| `FileAuthor` | path-scoped, git-committed writes (revert point per change) | new (eve-studio's best pattern) |
+| `Updater` | electron-updater + GitHub Releases feed, signature-verified | new |
+| `createConsole()` | facade wiring `@appydave/core` + Tier-2 into one object | Sentinel's `createSentinel` shape |
 
-Core runtime deps kept minimal (Sentinel discipline): `pino`, `zod`, `ulid`, plus Electron-required `electron-updater`. Everything else (SQLite, MCP SDK, chokidar…) arrives only via a recipe.
+Adds `electron-updater` (+ Electron peer). Everything else (SQLite, MCP SDK, chokidar…) arrives via a recipe.
 
 ---
 
 ## 7. The Scaffold System
 
-Three published packages + one baseline file (AppyStack's exact shape):
+One **shared** library + the AppyTron packages (baseline file = AppyStack's shape):
 
 ```
-@appydave/appytron-core     — primitives + createConsole()        (published)
-@appydave/appytron-config   — shared ESLint/TS/Prettier/Vitest    (published)
-create-appytron             — static scaffold (Layer 1) + upgrade  (published)
-appytron-upgrade            — thin wrapper: `npx appytron-upgrade`  (published)
-template/                   — canonical electron-vite app (NOT published)
-appytron.json               — written at scaffold time, upgrade baseline
+@appydave/core            — shared foundation: Lifecycle/ConfigLoader/Logger/Store  (published · NO prefix · lives outside appytron/)
+@appydave/appytron-config — shared ESLint/TS/Prettier/Vitest                        (published · candidate to also become @appydave/config)
+create-appytron           — static scaffold (Layer 1) + upgrade                     (published)
+appytron-upgrade          — thin wrapper: `npx appytron-upgrade`                     (published)
+template/                 — self-contained electron-vite app; carries AppyTron's own (NOT published)
+                            Electron primitives + createConsole() as SOURCE; deps @appydave/core
+appytron.json             — written at scaffold time, upgrade baseline
 ```
+> By the same "shared commonality = its own library" logic, `appytron-config` may also collapse
+> into a neutral `@appydave/config` — flagged, not decided.
 
 **Layer 1 — static CLI** (`npx create-appytron my-app`): copy `template/`, string-replace name/scope/appId/productName, `npm install`, `git init`, optional `gh` repo, write `appytron.json`. Deterministic, zero-LLM.
 
@@ -348,19 +367,25 @@ Neither parent covers this — it's AppyTron's own domain (AppyStack ships a Doc
 3. **Update feed** — ✅ **GitHub Releases** (electron-builder native provider; zero extra infra; matches the public `appydave/*` pattern).
 4. **First pilot** — ✅ **The "Drip" Image-Batch Console** → see [`docs/pilots/drip-plan.md`](./pilots/drip-plan.md). Not needed to start Phase 1; it pressure-tests the recipe catalogue.
 5. **Composition depth ("native cockpit over AppySentinel daemons")** — ✅ **Later concern, NOT v1.** The first pilot (Drip) drives *local* processes/UI/files and needs no `fleet-client`; defer that recipe until a fleet-cockpit pilot actually demands it (Sentinel rule: recipes are byproducts of pilots).
+6. **Shared foundation library** — ✅ **`@appydave/core`** (neutral name, no product prefix) holds the cross-boilerplate primitives (`Lifecycle`/`ConfigLoader`/`Logger`/`Store`). **Build now.** The tested code already exists in `@appydave/appysentinel-core` → extract from there. AppyTron is the first consumer; backfill AppyStack/AppySentinel onto it "as needed" (order = whatever's efficient). Target substantial completion **before Drip**. AppyTron stays **self-contained** — its Electron primitives are template source, not a published package; a future `@appydave/appytron-shell` is parked. (`appytron-config` may likewise collapse to `@appydave/config` — flagged, not decided.)
 
 ---
 
 ## 15. Naming & Package Layout
 
 ```
+# Shared foundation — lives OUTSIDE appytron/ (it is not AppyTron's):
+~/dev/ad/apps/appydave-core/    → @appydave/core   (Lifecycle/ConfigLoader/Logger/Store)  [home TBC]
+
+# AppyTron itself:
 ~/dev/ad/apps/appytron/
-├── docs/                       # this plan + architecture/recipes as they solidify
+├── docs/                       # plan + pilots + specs
 ├── config/    → @appydave/appytron-config     (shared linting/TS/test)
-├── core/      → @appydave/appytron-core        (primitives + createConsole)
 ├── create-appytron/            → create-appytron  (Layer 1 + upgrade)
 ├── appytron-upgrade/           → appytron-upgrade (thin wrapper)
-└── template/                   # canonical electron-vite app (the product)
+└── template/                   # self-contained electron-vite app (the product);
+                                # carries Tier-2 Electron primitives + createConsole() as source;
+                                # depends on @appydave/core
 ```
 
 Baseline file in every scaffolded app: `appytron.json`. Bridge global: `window.appytron`.
@@ -368,4 +393,37 @@ Baseline file in every scaffolded app: `appytron.json`. Bridge global: `window.a
 
 ---
 
-*This is a draft plan for ratification, not a build. Nothing is scaffolded yet — Phase 1 begins on David's go.*
+---
+
+## 16. Repo / Library Landscape (LOCKED 2026-07-18)
+
+```
+AppyDave (org)
+├── SHARED FOUNDATION  ── neutral, no product prefix ── reused by ALL boilerplates
+│   └── 📦 appydave/foundation  (monorepo)   local: ~/dev/ad/apps/appydave-foundation/
+│       └── packages/
+│           ├── @appydave/core    ← Lifecycle · ConfigLoader · Logger · Store   (BUILD NOW — extract from appysentinel-core)
+│           ├── @appydave/config  ← shared ESLint/TS/Prettier/Vitest            (candidate — flagged, not decided)
+│           └── … future shared libs land here
+├── BOILERPLATES  ── 3 scaffolds, each SELF-CONTAINED, each depends ▶ @appydave/core
+│   ├── 📦 appydave/appystack      (WEB — RVETS)            depends ▶ @appydave/core*
+│   ├── 📦 appydave/appysentinel   (HEADLESS daemon)        depends ▶ @appydave/core
+│   └── 📦 appydave/appytron       (DESKTOP / Electron)     depends ▶ @appydave/core
+│       └── template/ carries AppyTron's OWN Electron primitives as SOURCE:
+│           WindowManager · IpcRouter · Bridge · ProcessSupervisor · FileAuthor · Updater · createConsole()
+└── APPS (Tier 3) ── produced BY the boilerplates
+    └── (appytron) ⭐ FIRST PILOT: "Drip" — image-batch console (drives ChatGPT UI, no API)
+
+  *  appystack: backfilled onto @appydave/core "as needed" (later).
+     appysentinel-core: after extraction keeps only Sentinel-specific bits
+     (Signal · SignalBus · createSentinel · QueryResult) and depends on @appydave/core.
+```
+
+**Extraction manifest — `appysentinel-core` → `@appydave/core` (verified 2026-07-18):**
+Move (with tests): `lifecycle.ts`, `config.ts`, `logger.ts`, `atomic-write.ts`, `serial-queue.ts`.
+Keep in Sentinel: `signal.ts`, `bus.ts`, `create-sentinel.ts`, `query.ts`.
+`Store` = new thin wrapper over `atomicWrite` + `SerialQueue`. Deps: `pino`, `zod` (+ `ulid` only if needed).
+**Toolchain: Bun + Vitest + tsc** (matches appysentinel — zero-friction lift). Extract by **copy** first
+(zero risk to the live Sentinel); de-duplicate Sentinel onto `@appydave/core` later.
+
+*Nothing is scaffolded yet — the build begins on David's go.*
