@@ -1,0 +1,33 @@
+{
+  "name": "create-appytron",
+  "version": "0.1.0",
+  "description": "Scaffold a new AppyTron desktop app — Electron, built on @appydave/core.",
+  "type": "module",
+  "bin": {
+    "create-appytron": "./dist/index.js"
+  },
+  "files": [
+    "dist/",
+    "template/",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "echo 'create-appytron lint stub' && exit 0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "keywords": ["appydave", "appytron", "electron", "scaffold", "create", "desktop"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appydave/appytron.git",
+    "directory": "create-appytron"
+  },
+  "author": "David Cruwys",
+  "license": "MIT"
+}
