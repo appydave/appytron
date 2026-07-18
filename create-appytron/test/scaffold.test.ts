@@ -62,4 +62,13 @@ describe('scaffold', () => {
     expect(main).toContain("name: 'zapp'");
     expect(main).not.toContain('appytron-app');
   });
+
+  it('rewrites the packaging identity in electron-builder.yml', async () => {
+    await scaffold({ templateDir: TEMPLATE, targetDir: target, appName: 'zapp' });
+    const yml = await fs.readFile(join(target, 'electron-builder.yml'), 'utf8');
+    expect(yml).toContain('appId: com.appydave.zapp');
+    expect(yml).toContain('productName: zapp');
+    expect(yml).toContain('repo: zapp');
+    expect(yml).not.toContain('appytron-app');
+  });
 });

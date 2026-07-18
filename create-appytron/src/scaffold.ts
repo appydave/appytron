@@ -83,5 +83,11 @@ export async function scaffold(options: ScaffoldOptions): Promise<ScaffoldResult
   await replaceInFile(join(targetDir, 'src/main/index.ts'), TEMPLATE_APP_NAME, appName);
   await replaceInFile(join(targetDir, 'src/renderer/index.html'), 'AppyTron App', appName);
 
+  // Packaging identity (electron-builder.yml): appId, productName, publish repo.
+  const builderYml = join(targetDir, 'electron-builder.yml');
+  await replaceInFile(builderYml, 'com.appydave.appytron-app', `com.appydave.${appName}`);
+  await replaceInFile(builderYml, 'productName: AppyTron App', `productName: ${appName}`);
+  await replaceInFile(builderYml, 'repo: appytron', `repo: ${appName}`);
+
   return { files, targetDir };
 }
