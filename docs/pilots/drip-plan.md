@@ -23,7 +23,7 @@ A native desktop console (an AppyTron app) that **drives ChatGPT's image UI
 (DALL·E / GPT-image) directly — no paid API.** It pastes image prompts into the real
 ChatGPT window on a **human-like cadence**, uses **vision (region screenshots)** to detect
 when each image is done, then **auto-downloads, names, and routes** the results into a
-project's output directory. Later target: DZINE (pending Mary's workflow input).
+project's output directory. Later target: other image UIs (e.g. DZINE).
 
 ## Why it's the *ideal* first pilot
 It exercises exactly AppyTron's unique job — a **mutating operator console** driving *local
@@ -84,21 +84,23 @@ surface** — it types into other apps, watches the screen, and writes files. Tr
 AppyTron §9: scoped `FileAuthor` root only, explicit macOS Accessibility + Screen Recording
 grants, STOP key always live. Ties to `~/dev/ad/brains/personal-security`.
 
-## First real job (built-in test data)
-Joy's juice-bar product batch — **116 products currently with no photo.**
-- Style: warm honey-wood counter, cream Thai-juice-bar interior, brass-gold accents, green
-  plant, **text-free**, 1:1 square product shot (matches the approved "mango demo").
-- Output dir: `joy-media/brand-art/juice-product/` (+ provenance log; product `photoRefs`
-  set via the till API).
-- Prompt list (116 prompts, one per product):
-  `/private/tmp/claude-501/-Users-davidcruwys-dev-ad-joy/efefc0cc-3322-48af-b496-0b6aaeed2818/scratchpad/product-image-batch-preview.html`
-  *(ephemeral scratchpad — copy into the project before relying on it).*
-- **This is the cost case:** that HTML currently assumes the paid nano-banana-2 API
-  (~$0.06 × 116 ≈ **$6.96/run**). Drip does the same batch on the ChatGPT subscription for
-  $0 — and batches will recur, so the saving compounds.
+## Example job shape (business-agnostic)
+A *job* is external input — **not part of Drip.** A consuming project supplies:
+- a **locked style** (the seed/reference established in Style Studio),
+- a **prompt list** (one prompt per image),
+- an **output directory** (+ optional provenance log / callback to record image refs).
+
+Drip runs the batch; the concrete job — products, brand, paths, counts — lives in the
+**consuming project**, never in this repo. (The first real batch it will be pointed at is a
+private project's product-image run; those specifics stay in that project.)
+
+**Cost rationale (why the ChatGPT-UI constraint):** paid image APIs run ~\$0.06/image, so a
+100+ image batch is several dollars *per run*, and batches recur. Drip does the same batch on an
+existing ChatGPT subscription for **\$0** — the saving compounds across runs. That economic fact
+is *why* the no-API-credits constraint drives the whole architecture.
 
 ## Open decisions for the pilot
 1. **Name** — Drip / FliShot / Conveyor / Relay (currently "Drip").
 2. **Plan doc home** — this file (`docs/pilots/drip-plan.md`) ✅.
-3. **Scope of v1** — Batch Runner first (proves engine + vision + harvest on the Joy 116),
+3. **Scope of v1** — Batch Runner first (proves engine + vision + harvest on a real batch),
    with Style Studio as a fast-follow — or both in v1?
