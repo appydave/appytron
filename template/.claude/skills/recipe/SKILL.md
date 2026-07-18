@@ -16,6 +16,8 @@ Tier-2 primitives in `src/main/` (`WindowManager`, `IpcRouter`, `Bridge`, `Proce
 
 | Recipe | What it builds | Reference |
 |--------|----------------|-----------|
+| **nav-shell** | The app-shell layout — sidebar rail + workspace, view switching (no router) | `references/nav-shell.md` |
+| **ipc-crud** | Typed CRUD for an entity, local-first, over the IPC bridge | `references/ipc-crud.md` |
 | **wrap-cli** | Turn an off-the-shelf CLI into a native desktop console | `references/wrap-cli.md` |
 | **landing-page** | A branded landing + download page (the app's distribution surface) | `references/landing-page.md` |
 
