@@ -48,7 +48,11 @@ export class FileAuthor {
     return abs;
   }
 
-  async write(relPath: string, content: string, message?: string): Promise<AuthorResult> {
+  async write(
+    relPath: string,
+    content: string | Uint8Array,
+    message?: string,
+  ): Promise<AuthorResult> {
     const abs = this.safe(relPath);
     await fs.mkdir(dirname(abs), { recursive: true });
     await atomicWrite(abs, content);

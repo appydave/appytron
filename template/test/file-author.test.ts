@@ -46,6 +46,15 @@ describe('FileAuthor', () => {
     await expect(fs.access(join(root, 'gone.txt'))).rejects.toThrow();
   });
 
+  it('writes binary content (Uint8Array) — e.g. a harvested image', async () => {
+    const author = new FileAuthor({ root });
+    const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47]); // PNG magic
+    const res = await author.write('img/x.png', bytes, 'add png');
+    expect(res.committed).toBe(true);
+    const read = await fs.readFile(join(root, 'img/x.png'));
+    expect(read.equals(Buffer.from(bytes))).toBe(true);
+  });
+
   it('writes without committing when git is disabled', async () => {
     const author = new FileAuthor({ root, git: false });
     const res = await author.write('nogit.txt', 'x');
