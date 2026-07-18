@@ -56,6 +56,19 @@ describe('scaffold', () => {
     await expect(fs.access(join(target, 'out'))).rejects.toThrow();
   });
 
+  it('writes the appytron.json upgrade baseline', async () => {
+    await scaffold({
+      templateDir: TEMPLATE,
+      targetDir: target,
+      appName: 'baseapp',
+      now: '2026-03-03T00:00:00Z',
+    });
+    const b = JSON.parse(await fs.readFile(join(target, 'appytron.json'), 'utf8'));
+    expect(b.app).toBe('baseapp');
+    expect(b.core).toBe('^0.1.0');
+    expect(b.scaffolded).toBe('2026-03-03T00:00:00Z');
+  });
+
   it('rewrites the createConsole app name in main/index.ts', async () => {
     await scaffold({ templateDir: TEMPLATE, targetDir: target, appName: 'zapp' });
     const main = await fs.readFile(join(target, 'src/main/index.ts'), 'utf8');

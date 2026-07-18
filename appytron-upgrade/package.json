@@ -1,0 +1,24 @@
+{
+  "name": "appytron-upgrade",
+  "version": "0.1.0",
+  "description": "Pull AppyTron template improvements into an existing app — thin wrapper over create-appytron's upgrade.",
+  "type": "module",
+  "bin": {
+    "appytron-upgrade": "./bin/index.mjs"
+  },
+  "files": [
+    "bin/",
+    "README.md"
+  ],
+  "dependencies": {
+    "create-appytron": "^0.1.0"
+  },
+  "keywords": ["appydave", "appytron", "upgrade", "scaffold"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appydave/appytron.git",
+    "directory": "appytron-upgrade"
+  },
+  "author": "David Cruwys",
+  "license": "MIT"
+}

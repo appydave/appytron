@@ -10,6 +10,10 @@ export interface ScaffoldOptions {
   appName: string;
   /** Published @appydave/core version to pin (replaces the dev `file:` link). */
   coreVersion?: string;
+  /** create-appytron version recorded as the upgrade baseline. */
+  cliVersion?: string;
+  /** ISO timestamp for the baseline (injectable for deterministic tests). */
+  now?: string;
 }
 
 export interface ScaffoldResult {
@@ -88,6 +92,15 @@ export async function scaffold(options: ScaffoldOptions): Promise<ScaffoldResult
   await replaceInFile(builderYml, 'com.appydave.appytron-app', `com.appydave.${appName}`);
   await replaceInFile(builderYml, 'productName: AppyTron App', `productName: ${appName}`);
   await replaceInFile(builderYml, 'repo: appytron', `repo: ${appName}`);
+
+  // Write the upgrade baseline (read by `appytron-upgrade`).
+  const baseline = {
+    app: appName,
+    core: coreVersion,
+    createAppytron: options.cliVersion ?? '0.1.0',
+    scaffolded: options.now ?? new Date().toISOString(),
+  };
+  await fs.writeFile(join(targetDir, 'appytron.json'), `${JSON.stringify(baseline, null, 2)}\n`);
 
   return { files, targetDir };
 }

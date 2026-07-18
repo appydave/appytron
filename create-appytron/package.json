@@ -3,8 +3,15 @@
   "version": "0.1.0",
   "description": "Scaffold a new AppyTron desktop app — Electron, built on @appydave/core.",
   "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./upgrade": "./dist/upgrade.js",
+    "./package.json": "./package.json"
+  },
   "bin": {
-    "create-appytron": "./dist/index.js"
+    "create-appytron": "./dist/index.js",
+    "appytron-upgrade": "./dist/upgrade-cli.js"
   },
   "files": [
     "dist/",
