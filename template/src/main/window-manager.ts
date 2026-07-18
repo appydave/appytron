@@ -23,8 +23,12 @@ export class WindowManager {
       title: options.title,
       titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
       webPreferences: {
-        preload: join(__dirname, '../preload/index.js'),
-        sandbox: true,
+        // electron-vite emits the preload as index.mjs (ESM).
+        preload: join(__dirname, '../preload/index.mjs'),
+        // sandbox:false is required for an ESM preload; security still holds via
+        // contextIsolation + nodeIntegration:false + the minimal typed bridge (docs §9).
+        // Hardening to sandbox:true later requires a CommonJS preload.
+        sandbox: false,
         contextIsolation: true,
         nodeIntegration: false,
       },

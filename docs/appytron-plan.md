@@ -142,7 +142,7 @@ Read `~/dev/upstream/repos/eve-studio` as a **reference blueprint** for *how a g
 │  nav-shell · workspace tabs · views                            │
 └───────────────▲──────────────────────────────┬────────────────┘
                 │  window.appytron (typed API)   │ IPC (contextIsolated,
-                │  exposed by preload            │      sandbox:true)
+                │  exposed by preload            │      sandbox:false*)
 ┌───────────────┴──────────────────────────────▼────────────────┐
 │  PRELOAD  (src/preload)  — the ONLY door                        │
 │  contextBridge.exposeInMainWorld('appytron', <typed api>)      │
@@ -298,7 +298,11 @@ most valuable output — the reason someone reaches for AppyTron at all:
 An Electron console has **local file/process access + it renders content + it can act** — the lethal trifecta. This gets first-class treatment (ties to `brains/personal-security`).
 
 Non-negotiable template defaults:
-- `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`. Renderer never gets Node.
+- `contextIsolation: true`, `nodeIntegration: false`. Renderer never gets Node. **`sandbox: false`**
+  in practice — an ESM (`.mjs`) preload (electron-vite's output) cannot run under `sandbox: true`,
+  which requires a CommonJS preload; security is carried by contextIsolation + the minimal typed
+  bridge + Zod + CSP (this is eve-studio's posture too). `sandbox: true` is a documented **future
+  hardening** step, gated on emitting a CommonJS preload.
 - **Preload is the only bridge**; expose the *minimal* typed API via `contextBridge` — no raw `ipcRenderer`.
 - **Zod-validate every IPC payload** in main before acting. Treat all renderer input as untrusted.
 - **Path-safe file authoring** — `FileAuthor` refuses any path outside its scoped root (eve-studio does this; make it a primitive guarantee, not a per-app habit).
