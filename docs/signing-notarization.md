@@ -1,5 +1,9 @@
 # macOS Signing & Notarization — prep checklist
 
+> **For the full picture** — how KyberBot ships + self-updates, the honest "$99 or not" answer, and
+> the auto-update implementation to copy — see [`distribution-and-auto-update.md`](./distribution-and-auto-update.md).
+> This file is just the one-time Apple-credential checklist.
+
 AppyTron builds are **macOS-first** and ship via a GitHub-Releases auto-update feed. For users to
 run a downloaded build without Gatekeeper warnings (and for auto-update to work), builds must be
 **signed with a Developer ID and notarized by Apple**. Everything is env-driven, so the code needs
