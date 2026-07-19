@@ -4,3 +4,6 @@ dist/
 .env
 .DS_Store
 *.log
+
+# create-appytron scaffold probe — generated sample output, not source (regenerate via create-appytron)
+create-appytron/probe/
