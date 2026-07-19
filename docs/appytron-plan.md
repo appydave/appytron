@@ -13,6 +13,11 @@ reference:
 
 # AppyTron — Requirements & Build Plan
 
+> **Status: BUILT (2026-07-19).** The scaffold is built, published, CI-green, and running. This is
+> the design/rationale doc; for what actually shipped (and where it diverged from this plan — stack
+> versions, deferred pieces), see [`BUILD-LOG.md`](./BUILD-LOG.md). For how it works, see
+> [`../CONTEXT.md`](../CONTEXT.md).
+
 ## 0. TL;DR
 
 **AppyTron is the third AppyDave scaffold: it builds native, local-first desktop apps (Electron).**
@@ -371,7 +376,7 @@ Neither parent covers this — it's AppyTron's own domain (AppyStack ships a Doc
 3. **Update feed** — ✅ **GitHub Releases** (electron-builder native provider; zero extra infra; matches the public `appydave/*` pattern).
 4. **First pilot** — ✅ **The "ImageDrip" Image-Batch Console** → see [`docs/pilots/imagedrip-plan.md`](./pilots/imagedrip-plan.md). Not needed to start Phase 1; it pressure-tests the recipe catalogue.
 5. **Composition depth ("native cockpit over AppySentinel daemons")** — ✅ **Later concern, NOT v1.** The first pilot (ImageDrip) drives *local* processes/UI/files and needs no `fleet-client`; defer that recipe until a fleet-cockpit pilot actually demands it (Sentinel rule: recipes are byproducts of pilots).
-6. **Shared foundation library** — ✅ **`@appydave/core`** (neutral name, no product prefix) holds the cross-boilerplate primitives (`Lifecycle`/`ConfigLoader`/`Logger`/`Store`). **Build now.** The tested code already exists in `@appydave/appysentinel-core` → extract from there. AppyTron is the first consumer; backfill AppyStack/AppySentinel onto it "as needed" (order = whatever's efficient). Target substantial completion **before ImageDrip**. AppyTron stays **self-contained** — its Electron primitives are template source, not a published package; a future `@appydave/appytron-shell` is parked. (`appytron-config` may likewise collapse to `@appydave/config` — flagged, not decided.)
+6. **Shared foundation library** — ✅ **`@appydave/core`** (neutral name, no product prefix) holds the cross-boilerplate primitives (`Lifecycle`/`ConfigLoader`/`Logger`/`Store`). **Build now.** The tested code already exists in `@appydave/appysentinel-core` → extract from there. AppyTron is the first consumer; backfill AppyStack/AppySentinel onto it "as needed" (order = whatever's efficient). Target substantial completion **before ImageDrip**. AppyTron stays **self-contained** — its Electron primitives are template source, not a published package; a future `@appydave/appytron-shell` is parked. (`appytron-config` may likewise collapse to `@appydave/config` — flagged, not decided.) **→ DONE: published to npm as `@appydave/core@0.1.0` (public), 2026-07-19.**
 
 ---
 
