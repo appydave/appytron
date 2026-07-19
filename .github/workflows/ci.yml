@@ -1,0 +1,45 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  create-appytron:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: create-appytron
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+
+  template:
+    runs-on: ubuntu-latest
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1' # types/build only; no runtime binary needed in CI
+    steps:
+      # The template pins @appydave/core via a file: link into a sibling checkout,
+      # so it can be edited alongside core in the monorepo. Recreate that layout in CI.
+      - uses: actions/checkout@v4
+        with:
+          path: appytron
+      - uses: actions/checkout@v4
+        with:
+          repository: appydave/foundation
+          path: appydave-foundation
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: build @appydave/core
+        working-directory: appydave-foundation
+        run: bun install && bun run build
+      - name: template typecheck + test + build
+        working-directory: appytron/template
+        run: npm install --no-audit --no-fund && npm run typecheck && npm test && npm run build

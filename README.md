@@ -41,7 +41,7 @@ Read **[`CONTEXT.md`](./CONTEXT.md)** — a read-once orientation to the primiti
 ## Status
 
 Early. The scaffold is complete and runs end-to-end (`@appydave/core` → `createConsole` →
-native window + typed IPC). `@appydave/core` is not yet published to npm, so scaffolded apps build
-against the local monorepo for now.
+native window + typed IPC). `@appydave/core@0.1.0` is published to npm, so `npx create-appytron`
+produces an app that installs and runs out of the box.
 
 MIT · David Cruwys

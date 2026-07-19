@@ -159,10 +159,9 @@ supplied when a Developer ID is available. Auto-update reads the GitHub-Releases
   `index.js` silently fails and `window.appytron` is never defined (symptom: UI stuck "loading…",
   buttons do nothing). `WindowManager` loads `../preload/index.mjs`.
 - **`sandbox: true` breaks an ESM preload.** See §6.
-- **`@appydave/core` is `file:`-linked in dev**, rewritten to a published semver by
-  `create-appytron`. Until `@appydave/core` is published to npm, a scaffolded app's `^0.1.0`
-  dependency won't resolve — build locally against the monorepo, or the CLI can keep the `file:`
-  link for local dev.
+- **`@appydave/core@0.1.0` is published to npm** (public) — a scaffolded app's default `^0.1.0`
+  resolves. `create-appytron --link-core` keeps a `file:` link (recomputed relative to the target)
+  when you want to edit core + the app together in the monorepo.
 - **Two tsconfigs** (`tsconfig.node.json` for main/preload/shared, `tsconfig.web.json` for
   renderer). App code in both is `never`-touched by the upgrade system.
 - **Data lives local-first** (via `Store`); there is no server.
