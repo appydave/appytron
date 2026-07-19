@@ -32,8 +32,16 @@ export interface ScaffoldResult {
   skipped: string[];
 }
 
-/** Directories never copied into a scaffolded app. */
-const SKIP = new Set(['node_modules', 'out', 'dist', '.turbo', '.git']);
+/**
+ * Entries never copied into a scaffolded app. Includes lockfiles: the template's
+ * lockfile pins @appydave/core to a dev `file:` link, so copying it makes a fresh
+ * app resolve a dangling path instead of the published version. A scaffolded app
+ * generates its own lockfile on first install.
+ */
+const SKIP = new Set([
+  'node_modules', 'out', 'dist', '.turbo', '.git',
+  'package-lock.json', 'bun.lock', 'yarn.lock', 'pnpm-lock.yaml',
+]);
 const TEMPLATE_APP_NAME = 'appytron-app';
 const CORE_DEV_DEP = 'file:../../appydave-foundation/packages/core';
 

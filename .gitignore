@@ -7,3 +7,6 @@ dist/
 
 # create-appytron scaffold probe — generated sample output, not source (regenerate via create-appytron)
 create-appytron/probe/
+
+# Template lockfile — regenerated per app on first install; must not ship the dev file:-linked one
+template/package-lock.json

@@ -2,7 +2,11 @@ import { promises as fs } from 'node:fs';
 import { join, relative, dirname } from 'node:path';
 import { classify, type Tier } from './lib/classify.js';
 
-const SKIP_DIRS = new Set(['node_modules', 'out', 'dist', '.git', '.turbo']);
+const SKIP_DIRS = new Set([
+  'node_modules', 'out', 'dist', '.git', '.turbo',
+  // Lockfiles: never propagate the template's dev `file:`-pinned lockfile into an app.
+  'package-lock.json', 'bun.lock', 'yarn.lock', 'pnpm-lock.yaml',
+]);
 
 export type UpgradeAction = 'new' | 'update' | 'unchanged' | 'skip';
 
