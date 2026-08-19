@@ -10,7 +10,15 @@ export default function App(): JSX.Element {
   }, [loadInfo, loadCount]);
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-neutral-950 text-neutral-100">
+      {/* The window has no native title bar (titleBarStyle: 'hiddenInset'), so
+          this strip is what you grab to move it. Keep a drag strip in every
+          window; mark any control inside it `app-no-drag`. */}
+      <div className="app-drag flex h-11 select-none items-center text-xs text-neutral-500">
+        AppyTron
+      </div>
+
+      <div className="flex items-center justify-center p-8">
       <div className="w-full max-w-lg space-y-6">
         <header>
           <h1 className="text-2xl font-semibold">AppyTron</h1>
@@ -67,6 +75,7 @@ export default function App(): JSX.Element {
           </div>
           <p className="text-xs text-neutral-500">Survives a restart — written to disk via Store.</p>
         </section>
+      </div>
       </div>
     </div>
   );

@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ==========================================================================
+   WINDOW DRAG REGION
+
+   window-manager.ts uses `titleBarStyle: 'hiddenInset'` on macOS, which removes
+   the native title bar. Electron then draws NO draggable area of its own — the
+   page must declare one, or the window cannot be moved at all and dragging the
+   top of the app selects text instead.
+
+   Put `.app-drag` on a strip at the top of every window. Anything inside it
+   that a user needs to click (button, input, link) must opt back out with
+   `.app-no-drag`, or the drag handler swallows the click.
+   ========================================================================== */
+
+.app-drag {
+  -webkit-app-region: drag;
+  /* Clear the traffic lights, which float over the content with hiddenInset. */
+  padding-left: 78px;
+}
+
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}

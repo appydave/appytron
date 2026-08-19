@@ -159,6 +159,14 @@ supplied when a Developer ID is available. Auto-update reads the GitHub-Releases
   `index.js` silently fails and `window.appytron` is never defined (symptom: UI stuck "loading…",
   buttons do nothing). `WindowManager` loads `../preload/index.mjs`.
 - **`sandbox: true` breaks an ESM preload.** See §6.
+- **The window has no native title bar, so the page must supply the drag region.**
+  `WindowManager` sets `titleBarStyle: 'hiddenInset'` on macOS. Electron then draws no draggable
+  area at all — without a `-webkit-app-region: drag` element the window **cannot be moved**, and
+  dragging the top of the app selects text instead (symptom: "I can't drag the window"). The
+  template ships `.app-drag` / `.app-no-drag` in `index.css` and a drag strip at the top of
+  `App.tsx`; keep one in every window, and mark controls inside it `.app-no-drag` or the drag
+  handler swallows their clicks. Also budget ~78px of left padding for the traffic lights, which
+  float over the content.
 - **`@appydave/core@0.1.0` is published to npm** (public) — a scaffolded app's default `^0.1.0`
   resolves. `create-appytron --link-core` keeps a `file:` link (recomputed relative to the target)
   when you want to edit core + the app together in the monorepo.
