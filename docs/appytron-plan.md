@@ -384,7 +384,9 @@ Neither parent covers this — it's AppyTron's own domain (AppyStack ships a Doc
 
 ```
 # Shared foundation — lives OUTSIDE appytron/ (it is not AppyTron's):
-~/dev/ad/apps/appydave-core/    → @appydave/core   (Lifecycle/ConfigLoader/Logger/Store)  [home TBC]
+~/dev/ad/apps/appydave-foundation/packages/core/  → @appydave/core  (Lifecycle/ConfigLoader/Logger/Store)
+#   ^ home RESOLVED 2026-07-19, path corrected 2026-08-23 (was "appydave-core/ [home TBC]";
+#     §16 and CONTEXT.md already said appydave-foundation — this line was the stale one)
 
 # AppyTron itself:
 ~/dev/ad/apps/appytron/
