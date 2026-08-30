@@ -80,3 +80,37 @@ to AppyTron (webview-harness, image-harvest, rate-limit-guard already contribute
 - AppySentinel (and AppyStack) de-dup onto `@appydave/core` — needs a go (live systems)
 - Apple Developer ID signing/notarization — see `docs/signing-notarization.md` (David's creds)
 - ImageDrip build-out — its own project
+
+## 2026-08-29 — ⚠️ `create-appytron@0.1.0` on npm cannot scaffold: the template is not in the tarball
+
+Found while watching the FliCut build, which hit it on its very first command and worked around it
+by using the repo-local path.
+
+**Verified, not inferred:**
+
+| Probe | Result |
+|---|---|
+| `package.json` `files` | `['dist/', 'template/', 'README.md']` — *declares* the template |
+| `npm pack --dry-run --json` | **0 files under `template/`** |
+| `create-appytron/template/` on disk | **does not exist** (no dir, no symlink) |
+| `prepack` / `prepublishOnly` script | **none** |
+| `npm view create-appytron dist.unpackedSize` | **33,645 bytes** — `dist/` + README only |
+
+**Root cause**: the template lives at `appytron/template`, one level **above** the package root.
+npm's `files` globs are relative to the package root, so `'template/'` matches nothing.
+
+**Effect**: `npx create-appytron my-app` — the headline command in `README.md` — fails with
+`template not found` for anyone outside this monorepo. `resolveTemplateDir()`'s first candidate
+(`../template`, commented *"bundled (published package)"*) is never present in the published
+package; only the repo-local dev fallback resolves.
+
+⚠️ **`CONTEXT.md` §Status is currently false**: *"`npx create-appytron` produces an app that installs
+and runs out of the box."* It does not.
+
+**Likely fix**: a `prepack` script that copies `../template` into the package root before packing
+(and `.gitignore`s the copy), then republish. **Not attempted** — found by a read-only watcher.
+
+**Workaround that works today**, and what FliCut used:
+```bash
+node /Users/davidcruwys/dev/ad/apps/appytron/create-appytron/dist/index.js <app> --here
+```
