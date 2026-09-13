@@ -114,3 +114,31 @@ and runs out of the box."* It does not.
 ```bash
 node /Users/davidcruwys/dev/ad/apps/appytron/create-appytron/dist/index.js <app> --here
 ```
+
+## 2026-09-13 — template stack bump (Electron 44 · electron-vite 5 · Vite 7 · Vitest 5 · React 19 · Tailwind 4)
+
+Done for FliCast Phase 0 (`~/dev/ad/flivideo/flicast`, deliver B568), which is scaffolded from this
+template. Evidence per dependency is in FliCast's `docs/phase-0/package-audit.md`; the short form:
+
+| package | was | now | why |
+|---|---|---|---|
+| electron | ^34.2.0 | ^44.3.0 | `npm view electron version` = 44.3.0 (latest stable) |
+| electron-vite | ^3.0.0 | ^5.0.0 | latest stable (6.0.0 is beta only) |
+| vite | ^6.1.0 | ^7.3.6 | **electron-vite 5 peer-deps `vite ^5 \|\| ^6 \|\| ^7`** — Vite 8 is blocked until electron-vite accepts it |
+| @vitejs/plugin-react | ^4.3.4 | ^5.2.0 | 6.x peer-deps `vite ^8`; 5.2.0 supports Vite 7 |
+| vitest | ^2.1.0 | ^5.0.0 | latest; peer-deps `vite ^6.4 \|\| ^7 \|\| ^8`; needs Node ≥ 22.12 (CI template job → Node 24) |
+| react / react-dom / @types | ^18.3 | ^19.3 | latest; `JSX.Element` global is gone → `React.JSX.Element` in `App.tsx` |
+| tailwindcss | ^3.4.17 | ^4.3.3 | latest; runs as `@tailwindcss/vite` plugin — `tailwind.config.js`, `postcss.config.js`, `postcss`, `autoprefixer` removed; `index.css` is `@import "tailwindcss"` |
+| electron-builder | ^25.1.8 | ^26.15.3 | latest |
+| typescript | ^5.7.3 | ^5.9.3 | **pinned to 5.x on purpose**: `latest` is 7.0.2, the Go-native port; not validated against electron-vite / vitest / `--composite false` yet — a separate spike |
+| @types/node | (transitive) | ^24.0.0 | now explicit; matches the Node 24 runtime and vitest 5's peer range |
+
+Verified on the M4 (Node 24.13.0, npm 11.6.2): `npm run typecheck` · `npm test` (8/8) · `npm run build`
+all green. `create-appytron` typecheck + 18 tests green. Not done: a live window launch (agent session
+over tmux; no display check), `npm publish`.
+
+**Gotcha found on the way** — the template's `file:` link to `@appydave/core` only works when the
+**foundation itself is installed**: Node resolves `zod`/`pino` from the real path of the symlinked
+package, so with an empty `appydave-foundation/node_modules` every core import fails with
+`Cannot find package 'zod'`. Fix: `cd ~/dev/ad/apps/appydave-foundation && bun install --frozen-lockfile`
+(what CI already does). FliCut never hit this because pnpm copies `file:` deps into its own store.

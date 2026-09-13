@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useAppStore } from './store';
 
-export default function App(): JSX.Element {
+export default function App(): React.JSX.Element {
   const { info, pong, count, loadInfo, sendPing, loadCount, increment } = useAppStore();
 
   useEffect(() => {

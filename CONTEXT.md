@@ -44,7 +44,7 @@ surfaces on the same machine.
 ## 2. The stack an app gets
 
 - **Electron** via `electron-vite` (main / preload / renderer split) + `electron-builder` (packaging)
-- **React 18 + Vite + TailwindCSS 3 + Zustand** in the renderer
+- **React 19 + Vite 7 + TailwindCSS 4 (Vite plugin) + Zustand** in the renderer
 - **`@appydave/core`** for logging / config / lifecycle / local-first storage
 - **AppyTron Tier-2 primitives** (in `src/main/`) for windows, IPC, process/file operation, updates
 - **Recipe skills** bundled at `.claude/skills/recipe/` (see §5)

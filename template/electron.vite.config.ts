@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 
 export default defineConfig({
@@ -25,6 +26,7 @@ export default defineConfig({
         '@shared': resolve('src/shared'),
       },
     },
-    plugins: [react()],
+    // Tailwind v4 runs as a Vite plugin — no postcss.config.js / tailwind.config.js.
+    plugins: [react(), tailwindcss()],
   },
 });
