@@ -107,9 +107,9 @@ describe('Feature: the pack script run as prepack and postpack do', () => {
     expect(await exists(join(pkg, 'template', 'package.json'))).toBe(true);
   });
 
-  // Open finding (Tester CT-0075 r1): the script logs on STDOUT, and npm passes lifecycle stdout through, so
-  // `npm pack --json` prints a log line before the JSON and `npm pack --json | jq` (or any JSON.parse) fails.
-  it.fails('Scenario: given prepack, when the script runs, then stdout stays empty so `npm pack --json` is still JSON', () => {
+  // Round-1 finding, fixed in round 2: the script logged on STDOUT, and npm passes lifecycle stdout through, so
+  // `npm pack --json` printed a log line before the JSON. It now logs on stderr.
+  it('Scenario: given prepack, when the script runs, then stdout stays empty so `npm pack --json` is still JSON', () => {
     const out = execFileSync('node', [script()], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
     expect(out).toBe('');
   });

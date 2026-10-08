@@ -31,6 +31,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     await cleanTemplate(to);
   } else {
     await bundleTemplate(resolve(pkg, '..', 'template'), to);
-    console.log(`create-appytron: bundled ../template into ${to}`);
+    // stderr, not stdout: npm passes lifecycle stdout through, and `npm pack --json` must stay parseable JSON.
+    console.error(`create-appytron: bundled ../template into ${to}`);
   }
 }
