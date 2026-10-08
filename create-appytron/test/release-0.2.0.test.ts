@@ -32,6 +32,21 @@ describe('Feature: the version reads 0.2.0 everywhere it appears', () => {
   });
 });
 
+describe('Feature: a new app records the version of the package that scaffolded it', () => {
+  it('Scenario: given the scaffolder sits beside a package.json saying 7.7.7, when ownVersion is read, then it is 7.7.7 (read from the file, not a constant)', async () => {
+    const tmp = await fs.realpath(await fs.mkdtemp(join(tmpdir(), 'appytron-ownver-')));
+    try {
+      await fs.mkdir(join(tmp, 'src'), { recursive: true });
+      await fs.copyFile(join(PKG, 'src', 'scaffold.ts'), join(tmp, 'src', 'scaffold.ts'));
+      await fs.writeFile(join(tmp, 'package.json'), JSON.stringify({ name: 'x', version: '7.7.7' }));
+      const mod = await import(/* @vite-ignore */ join(tmp, 'src', 'scaffold.ts'));
+      expect(mod.ownVersion()).toBe('7.7.7');
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('Feature: the tarball is built to carry the template', () => {
   it('Scenario: given package.json, when the pack hooks are read, then prepack builds dist and bundles, postpack cleans, and files lists dist, template and the changelog', async () => {
     const pkg = await readJson(join(PKG, 'package.json'));
