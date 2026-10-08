@@ -1,6 +1,6 @@
 {
   "name": "create-appytron",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Scaffold a new AppyTron desktop app — Electron, built on @appydave/core.",
   "type": "module",
   "main": "./dist/index.js",
@@ -16,13 +16,16 @@
   "files": [
     "dist/",
     "template/",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "lint": "echo 'create-appytron lint stub' && exit 0"
+    "lint": "echo 'create-appytron lint stub' && exit 0",
+    "prepack": "npm run build && node scripts/bundle-template.mjs",
+    "postpack": "node scripts/bundle-template.mjs --clean"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

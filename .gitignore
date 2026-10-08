@@ -10,3 +10,6 @@ create-appytron/probe/
 
 # Template lockfile — regenerated per app on first install; must not ship the dev file:-linked one
 template/package-lock.json
+
+# Copied in by create-appytron's prepack (scripts/bundle-template.mjs) and removed by postpack — never source
+create-appytron/template/

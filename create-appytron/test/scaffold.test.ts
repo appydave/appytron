@@ -69,6 +69,17 @@ describe('scaffold', () => {
     expect(b.scaffolded).toBe('2026-03-03T00:00:00Z');
   });
 
+  it('records the version of create-appytron that scaffolded the app, not a hard-coded one (CT-0075)', async () => {
+    const own = JSON.parse(await fs.readFile(resolve(dirname(fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8')).version;
+    expect(own).toBe('0.2.0');
+    await scaffold({ templateDir: TEMPLATE, targetDir: target, appName: 'verapp' });
+    const b = JSON.parse(await fs.readFile(join(target, 'appytron.json'), 'utf8'));
+    expect(b.createAppytron).toBe(own);
+    await fs.rm(join(target, 'appytron.json'));
+    await scaffold({ templateDir: TEMPLATE, targetDir: target, appName: 'verapp', merge: true, cliVersion: '9.9.9' });
+    expect(JSON.parse(await fs.readFile(join(target, 'appytron.json'), 'utf8')).createAppytron).toBe('9.9.9');
+  });
+
   it('--link-core writes a file: link that resolves to the real core dir (G1)', async () => {
     await scaffold({ templateDir: TEMPLATE, targetDir: target, appName: 'linked', linkCore: true });
     const pkg = JSON.parse(await fs.readFile(join(target, 'package.json'), 'utf8'));

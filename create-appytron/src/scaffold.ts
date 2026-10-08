@@ -1,5 +1,6 @@
-import { promises as fs, existsSync } from 'node:fs';
+import { promises as fs, existsSync, readFileSync } from 'node:fs';
 import { join, relative, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export interface ScaffoldOptions {
   /** Source template directory (the canonical AppyTron app). */
@@ -15,7 +16,7 @@ export interface ScaffoldOptions {
    * before the package is published). Overrides `coreVersion`.
    */
   linkCore?: boolean;
-  /** create-appytron version recorded as the upgrade baseline. */
+  /** create-appytron version recorded as the upgrade baseline (default: this package's own version). */
   cliVersion?: string;
   /** ISO timestamp for the baseline (injectable for deterministic tests). */
   now?: string;
@@ -42,6 +43,16 @@ const SKIP = new Set([
   'node_modules', 'out', 'dist', '.turbo', '.git',
   'package-lock.json', 'bun.lock', 'yarn.lock', 'pnpm-lock.yaml',
 ]);
+/**
+ * This package's own version, read from its package.json (one level above src/ and dist/). It is the baseline a new
+ * app records, so a scaffold from 0.2.0 never claims 0.1.0 (CT-0075: the hard-coded '0.1.0' made every new app read
+ * as drifted once the package moved on).
+ */
+export function ownVersion(): string {
+  const pkg = fileURLToPath(new URL('../package.json', import.meta.url));
+  return (JSON.parse(readFileSync(pkg, 'utf8')) as { version: string }).version;
+}
+
 const TEMPLATE_APP_NAME = 'appytron-app';
 const CORE_DEV_DEP = 'file:../../appydave-foundation/packages/core';
 
@@ -140,7 +151,7 @@ export async function scaffold(options: ScaffoldOptions): Promise<ScaffoldResult
     const baseline = {
       app: appName,
       core: coreDep,
-      createAppytron: options.cliVersion ?? '0.1.0',
+      createAppytron: options.cliVersion ?? ownVersion(),
       scaffolded: options.now ?? new Date().toISOString(),
     };
     await fs.writeFile(baselinePath, `${JSON.stringify(baseline, null, 2)}\n`);

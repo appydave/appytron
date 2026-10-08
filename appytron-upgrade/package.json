@@ -11,7 +11,7 @@
     "README.md"
   ],
   "dependencies": {
-    "create-appytron": "^0.1.0"
+    "create-appytron": "^0.2.0"
   },
   "keywords": ["appydave", "appytron", "upgrade", "scaffold"],
   "repository": {
