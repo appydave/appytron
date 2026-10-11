@@ -1,0 +1,248 @@
+<title>AppyTron Light Theme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: light AppyDave spec page. Before/after mock of the AppyTron starter window (dark today, AppyDave light after), then the spec. */
+:root {
+  color-scheme: light;
+  --brown: #342d2d; --gold: #ccba9d; --yellow: #ffde59; --amber: #c8841a;
+  --muted: #7a6e5e; --cream: #faf5ec; --surface: #f0ebe4; --linen: #e8e0d4;
+  --border: #d4cdc4; --chrome: #1a1515; --dark: #25201e; --blue: #2E91FC;
+  --red: #b5524a; --green: #4f7a3f;
+  --display: "Bebas Neue", Oswald, Impact, sans-serif;
+  --head: Oswald, "Arial Narrow", sans-serif;
+  --body: Roboto, system-ui, sans-serif;
+  --mono: "Roboto Mono", ui-monospace, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--cream); color: var(--brown); font-family: var(--body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 64px; display: grid; gap: 44px; }
+header.page { display: grid; gap: 12px; max-width: 72ch; }
+.logo-badge { display:inline-block; background: var(--brown); border-radius:6px; padding:4px 10px 2px; font-family: var(--display); letter-spacing:.04em; line-height:1.1; font-size: 22px; width: fit-content; }
+.logo-badge .a { color: var(--gold); } .logo-badge .d { color: var(--yellow); }
+.eyebrow { font-family: var(--head); text-transform: uppercase; letter-spacing: .12em; font-size: 13px; color: var(--amber); font-weight: 600; }
+h1 { font-family: var(--head); font-weight: 600; font-size: clamp(30px, 5vw, 44px); line-height: 1.1; margin: 0; text-transform: uppercase; text-wrap: balance; }
+h2 { font-family: var(--head); font-weight: 600; text-transform: uppercase; font-size: 26px; margin: 0; letter-spacing: .02em; text-wrap: balance; }
+h3 { font-family: var(--head); text-transform: uppercase; letter-spacing: .08em; font-size: 14px; color: var(--amber); margin: 0; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+header.page p { color: var(--muted); }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; color: var(--muted); }
+.facts b { color: var(--brown); font-weight: 500; }
+section { display: grid; gap: 16px; min-width: 0; }
+.lead { border-left: 3px solid var(--amber); padding: 2px 0 2px 12px; }
+code { font-family: var(--mono); font-size: 13px; background: var(--surface); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+
+/* story: three stuck steps */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+.step { display: grid; gap: 6px; border-top: 2px solid var(--amber); padding-top: 10px; }
+.step .n { font-family: var(--display); font-size: 34px; line-height: 1; color: var(--amber); }
+.step b { font-family: var(--head); font-weight: 500; font-size: 18px; }
+.step .now { color: var(--muted); font-size: 14px; }
+
+/* app mock */
+.ba { display: grid; gap: 28px; }
+.ba > div { display: grid; gap: 10px; min-width: 0; }
+.tag { font-family: var(--head); text-transform: uppercase; letter-spacing: .1em; font-size: 12px; font-weight: 600; color: var(--muted); }
+.tag.after { color: var(--amber); }
+.app { background: #fff; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; font-size: 13px; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 12px; border-bottom: 1px solid var(--linen); background: #fcfaf6; }
+.bar .proj { font-weight: 600; }
+.bar .tabs { display: flex; gap: 10px; color: var(--muted); }
+.bar .tabs span.on { color: var(--brown); font-weight: 500; }
+.bar .spacer { flex: 1; }
+.pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.pill .btn { border-left: 1px solid var(--border); padding-left: 6px; color: var(--brown); }
+.pill .btn.dim { color: var(--muted); }
+.pill.open { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.body { padding: 12px; color: var(--muted); }
+.callout { font-size: 13px; color: var(--muted); }
+
+.trash { padding: 12px; display: grid; gap: 10px; }
+.trash .head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; }
+.trash .head b { font-family: var(--head); font-weight: 500; font-size: 16px; color: var(--brown); }
+.trash .head span { color: var(--muted); }
+.trash .head .finder { margin-left: auto; border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; color: var(--brown); }
+.scroll { overflow-x: auto; }
+table.list { border-collapse: collapse; width: 100%; min-width: 560px; font-variant-numeric: tabular-nums; }
+table.list th { text-align: left; font-weight: 500; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 6px 8px; border-bottom: 1px solid var(--linen); }
+table.list td { padding: 6px 8px; border-bottom: 1px solid var(--linen); vertical-align: middle; }
+table.list .day td { background: var(--surface); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.play { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--brown); color: var(--cream); font-size: 9px; }
+.restore { border: 1px solid var(--brown); border-radius: 4px; padding: 2px 8px; background: var(--yellow); color: var(--brown); font-weight: 500; white-space: nowrap; }
+.restore.ghost { background: transparent; border-color: var(--border); color: var(--muted); }
+tr.hit td { background: #fffbe6; }
+.sub td { color: var(--muted); font-size: 12px; }
+.sub td:first-child { padding-left: 34px; }
+.msg { border-radius: 4px; padding: 8px 10px; font-size: 13px; }
+.msg.ok { background: #eef4ea; color: var(--green); }
+.msg.no { background: #f7ebe9; color: var(--red); }
+.caption { font-size: 14px; color: var(--muted); }
+
+.specgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 24px 32px; }
+.specgrid > div { display: grid; gap: 8px; min-width: 0; align-content: start; }
+table.spec { border-collapse: collapse; width: 100%; font-size: 15px; }
+table.spec th { text-align: left; vertical-align: top; font-weight: 500; color: var(--muted); padding: 7px 14px 7px 0; border-top: 1px solid var(--linen); width: 32%; }
+table.spec td { padding: 7px 0; border-top: 1px solid var(--linen); vertical-align: top; }
+ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.q { display: grid; gap: 4px; border-top: 1px solid var(--border); padding-top: 12px; }
+.q b { font-family: var(--head); font-weight: 500; font-size: 17px; }
+.rec::before { content: "My take: "; font-weight: 700; }
+.src { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+</style>
+<style>
+.win { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); font-size: 13px; max-width: 620px; }
+.win .tl { display:flex; gap:6px; position:absolute; left:12px; top:15px; }
+.win .tl i { width:11px; height:11px; border-radius:50%; display:block; }
+.win .tl i:nth-child(1){background:#ff5f57}.win .tl i:nth-child(2){background:#febc2e}.win .tl i:nth-child(3){background:#28c840}
+.win .drag { position:relative; height:40px; display:flex; align-items:center; padding-left:78px; font-size:11px; }
+.win .inner { padding: 20px 24px 28px; display:grid; gap:14px; }
+.win h4 { margin:0; font-size:20px; font-weight:600; }
+.win .card { border-radius:8px; padding:12px 14px; display:grid; gap:8px; }
+.win dl { display:grid; grid-template-columns: 90px 1fr; gap:2px 12px; margin:0; }
+.win dd { margin:0; }
+.win .b { border-radius:4px; padding:5px 11px; font-weight:500; width:fit-content; font-size:12px; }
+.win .row { display:flex; align-items:center; gap:12px; }
+.mono { font-family: var(--mono); }
+/* dark (today) */
+.dark { background:#0a0a0a; color:#f5f5f5; border-color:#262626; }
+.dark .drag { color:#737373; } .dark .card { border:1px solid #262626; } .dark .sub, .dark dt { color:#737373; } .dark dd { color:#d4d4d4; }
+.dark .b.ping { background:#4f46e5; color:#fff; } .dark .b.inc { background:#059669; color:#fff; } .dark .pong { color:#34d399; }
+/* light (after) */
+.light { background:var(--cream); color:var(--brown); outline:3px solid var(--yellow); outline-offset:3px; }
+.light .drag { color:var(--muted); border-bottom:1px solid var(--linen); } .light h4 { font-family:var(--head); text-transform:uppercase; letter-spacing:.02em; }
+.light .card { background:#fff; border:1px solid var(--border); } .light .card h5 { font-family:var(--head); }
+.light .sub, .light dt { color:#6d6354; }
+.light .b.ping { background:var(--yellow); color:var(--brown); border:1px solid var(--brown); } .light .b.inc { background:transparent; color:var(--brown); border:1px solid var(--brown); } .light .pong { color:var(--green); }
+.win h5 { margin:0; font-size:13px; font-weight:500; }
+.tiers { overflow-x:auto; }
+.tiers table { min-width: 520px; }
+.t-never { color: var(--green); font-weight:500; } .t-auto { color: var(--red); font-weight:500; }
+</style>
+
+<div class="wrap">
+  <header class="page">
+    <span class="logo-badge"><span class="a">Appy</span><span class="d">Dave</span></span>
+    <span class="eyebrow">Spec · AppyTron · D08 job 2 (no ticket yet) · 2026-10-11</span>
+    <h1>A new AppyTron app opens cream, not black</h1>
+    <p>Today the AppyTron starter window is near-black with indigo and green buttons. The AppyDave brand is light-only, so every app built from it starts off-brand and gets re-skinned by hand, as FliCast and Teletubby both were.</p>
+    <div class="facts"><span>Sample: <b>the template's own starter window, 1100 x 760</b></span><span>Size: <b>~30–45 min for one coder</b></span><span>Status: <b>draft brief, not authorised to build</b></span></div>
+  </header>
+
+  <section>
+    <h2>Where it hurts</h2>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><b>Scaffold a new desktop app</b><span class="now">Today: it opens near-black, Tailwind's default greys.</span></div>
+      <div class="step"><span class="n">2</span><b>It looks like someone else's app</b><span class="now">Today: no AppyDave colour or font anywhere in the template.</span></div>
+      <div class="step"><span class="n">3</span><b>Re-skin it by hand</b><span class="now">Today: FliCast and Teletubby each built their own light theme.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What you'd see</h2>
+    <div class="ba">
+      <div>
+        <span class="tag">Before (today)</span>
+        <div class="win dark">
+          <div class="drag"><span class="tl"><i></i><i></i><i></i></span>AppyTron</div>
+          <div class="inner">
+            <div><h4>AppyTron</h4><span class="sub">Native desktop scaffold · built on <span class="mono">@appydave/core</span></span></div>
+            <div class="card"><h5>App info · main → IPC → renderer</h5>
+              <dl><dt>name</dt><dd>…</dd><dt>version</dt><dd>…</dd><dt>electron</dt><dd>…</dd><dt>node</dt><dd>…</dd><dt>platform</dt><dd>darwin</dd></dl></div>
+            <div class="card"><h5>Typed IPC round-trip</h5><span class="b ping">Send ping</span><span class="mono pong">…</span></div>
+            <div class="card"><h5>Persistent counter · <span class="sub">@appydave/core Store</span></h5>
+              <div class="row"><span class="b inc">Increment</span><span class="mono">…</span></div><span class="sub" style="font-size:11px">Survives a restart — written to disk via Store.</span></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <span class="tag after">After</span>
+        <div class="win light">
+          <div class="drag"><span class="tl"><i></i><i></i><i></i></span>AppyTron</div>
+          <div class="inner">
+            <div><h4>AppyTron</h4><span class="sub">Native desktop scaffold · built on <span class="mono">@appydave/core</span></span></div>
+            <div class="card"><h5>App info · main → IPC → renderer</h5>
+              <dl><dt>name</dt><dd>…</dd><dt>version</dt><dd>…</dd><dt>electron</dt><dd>…</dd><dt>node</dt><dd>…</dd><dt>platform</dt><dd>darwin</dd></dl></div>
+            <div class="card"><h5>Typed IPC round-trip</h5><span class="b ping">Send ping</span><span class="mono pong">…</span></div>
+            <div class="card"><h5>Persistent counter · <span class="sub">@appydave/core Store</span></h5>
+              <div class="row"><span class="b inc">Increment</span><span class="mono">…</span></div><span class="sub" style="font-size:11px">Survives a restart — written to disk via Store.</span></div>
+          </div>
+        </div>
+        <p class="caption">Text, cards and layout are copied from <code>template/src/renderer/src/App.tsx:12-81</code>. The values (app name, versions, ping reply, count) come from the running app over IPC; I did not launch it, so they show <code>…</code>. Only the colours and fonts change, and the yellow CTA is used once.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What happens to existing apps</h2>
+    <p>Nothing. <code>create-appytron</code>'s upgrade sorts each template file into a tier, and every file this job edits is one the upgrade never touches.</p>
+    <div class="tiers">
+      <table class="list">
+        <tr><th>File this job edits</th><th>Tier</th><th>On upgrade</th></tr>
+        <tr><td><code>src/renderer/src/App.tsx</code></td><td class="t-never">never</td><td>skipped</td></tr>
+        <tr><td><code>src/renderer/src/index.css</code></td><td class="t-never">never</td><td>skipped</td></tr>
+        <tr><td><code>src/renderer/index.html</code> (fonts, if needed)</td><td class="t-never">never</td><td>skipped</td></tr>
+        <tr><td><code>package.json</code> (font packages, if bundled)</td><td class="t-never">owned</td><td>skipped</td></tr>
+        <tr><td><code>src/main/window-manager.ts</code> — <b>not edited</b></td><td class="t-auto">auto</td><td>overwritten silently</td></tr>
+      </table>
+    </div>
+    <p class="caption">FliCast and Teletubby are already light (FliCast uses <code>#faf5ec</code> 13 times; Teletubby uses its own <code>bg-canvas text-ink</code> tokens), so leaving them alone is right. The last row is why this job stays out of <code>window-manager.ts</code>: both apps have customised that file, and the upgrade would replace it.</p>
+  </section>
+
+  <section>
+    <h2>The spec</h2>
+    <div class="specgrid">
+      <div>
+        <h3>What the job is</h3>
+        <table class="spec">
+          <tr><th>Canvas</th><td>The window background is cream <code>#faf5ec</code>, text is brown <code>#342d2d</code>, <code>color-scheme: light</code>.</td></tr>
+          <tr><th>Theme tokens</th><td>An <code>@theme</code> block in the template's <code>index.css</code> holds the AppyDave palette, so apps use names like <code>bg-canvas</code>, not hex.</td></tr>
+          <tr><th>Cards</th><td>White cards on cream with a warm border <code>#d4cdc4</code>, in place of black with dark-grey borders.</td></tr>
+          <tr><th>Buttons</th><td>"Send ping" is the one yellow CTA; "Increment" is an outlined brown button. No indigo, no emerald.</td></tr>
+          <tr><th>Fonts</th><td>Oswald for headings, Roboto for body, Roboto Mono for values, loaded from inside the app (the page's security policy blocks Google Fonts).</td></tr>
+          <tr><th>Behaviour</th><td>Unchanged: same three cards, same IPC calls, same drag strip.</td></tr>
+          <tr><th>Existing apps</th><td>Untouched by an upgrade (renderer files are tier <code>never</code>).</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Done-check</h3>
+        <table class="spec">
+          <tr><th>proof</th><td><code>grep faf5ec</code> and <code>color-scheme: light</code> in template <code>index.css</code>; no <code>neutral-9</code> in <code>App.tsx</code>; no dark-mode media query; <code>npm run typecheck</code> and <code>npm test</code> pass in <code>template/</code>; an upgrade plan against FliCast lists the three renderer files as <code>skip</code>.</td></tr>
+          <tr><th>test_audit</th><td><code>dev-team:audit-test-quality</code> on any new tests (likely none: this is styling)</td></tr>
+          <tr><th>before_after</th><td>Two screenshots of a fresh scaffold's first window, before and after</td></tr>
+          <tr><th>duration</th><td>From the queue timestamps</td></tr>
+        </table>
+        <h3>Out of scope</h3>
+        <ul>
+          <li>Re-skinning existing apps — they are already light, and the upgrade leaves them alone.</li>
+          <li>A theme prompt in <code>create-appytron</code> — the AppyStack sibling (CT-0011) asks the same question; decide once.</li>
+          <li>The <code>window-manager.ts</code> auto-overwrite risk to FliCast and Teletubby — its own ticket.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What I checked, and what I didn't</h2>
+    <ul>
+      <li><code>template/src/renderer/src/App.tsx:13</code> — <code>bg-neutral-950 text-neutral-100</code>; borders <code>neutral-800</code> at :30, :50, :62; buttons <code>bg-indigo-600</code> :55 and <code>bg-emerald-600</code> :70; 15 <code>neutral-</code> classes in all.</li>
+      <li><code>template/src/renderer/src/index.css:1-24</code> — only the Tailwind import and drag-region classes; no theme at all.</li>
+      <li><code>template/src/renderer/index.html:6-9</code> — CSP <code>default-src 'self'</code>, no <code>font-src</code>: Google Fonts would be refused.</li>
+      <li><code>template/src/main/window-manager.ts:22,37</code> — window is created hidden and shown on <code>ready-to-show</code>, so there is no dark flash to fix with <code>backgroundColor</code>. <code>index.ts:52</code> opens 1100 x 760.</li>
+      <li><code>create-appytron/src/lib/classify.ts:8-43</code> and <code>upgrade.ts:50,90</code> — tiers as in the table above. Six apps carry <code>appytron.json</code>: FliCast, Teletubby, FliCut, FliEdit, Samantha, ImageDrip.</li>
+      <li>Not checked: the template was not built or launched, so I have not seen how Tailwind v4 picks up the new <code>@theme</code> names inside electron-vite, or how the bundled fonts land in the packaged <code>.app</code>. If fonts need build config, the job grows by ~15 min.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Choices for David</h2>
+    <div class="q"><b>Brand fonts: bundle them, or use system fonts?</b>
+      <p>Bundle Oswald / Roboto / Roboto Mono as npm font packages (works offline, adds ~1 MB), or relax the security policy to allow Google Fonts, or skip fonts and keep the system font with brand colours only.</p>
+      <p class="rec">Bundle them. A desktop app should not need the internet to look right, and loosening the security policy for fonts is the wrong trade.</p></div>
+    <div class="q"><b>Build this now, or wait for AppyStack CT-0011?</b>
+      <p>Ship AppyTron alone now, or do both templates in one pass so the token names match.</p>
+      <p class="rec">Now, but copy the token names from the staff-payments theme CT-0011 already points to, so the two templates line up without waiting.</p></div>
+  </section>
+
+  <p class="src">Brief: /Users/davidcruwys/dev/ad/apps/appytron/docs/briefs/light-theme-2026-10-11.md · Source file: /Users/davidcruwys/dev/ad/apps/appytron/docs/briefs/light-theme-spec.html</p>
+</div>
