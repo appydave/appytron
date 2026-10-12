@@ -1,7 +1,7 @@
 # AppyTron template opens in the AppyDave light theme
 
 **Status:** draft brief, not authorised to build. No dev-team ticket exists yet.
-**Job:** D08 job 2 (AppyTron). Sibling for AppyStack: `/Users/davidcruwys/dev/ad/appydave-plugins/dev-team/contract/tickets/CT-0011.md`
+**Job:** D09 job 2 (AppyTron). Sibling for AppyStack: `/Users/davidcruwys/dev/ad/appydave-plugins/dev-team/contract/tickets/CT-0011.md`
 **Spec artifact:** https://claude.ai/artifact/ScjVn6CPvocCZbuyppnVk1 · source `/Users/davidcruwys/dev/ad/apps/appytron/docs/briefs/light-theme-spec.html`
 **Written:** 2026-10-11
 
