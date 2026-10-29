@@ -7,9 +7,13 @@ Same tarball and recipe as FliCut (`/Users/davidcruwys/dev/ad/flivideo/flicut/ve
 
 ## Current tarball
 
-- `appydave-core-0.1.0-791e1c9.tgz`
-- Source: `/Users/davidcruwys/dev/ad/apps/appydave-foundation/packages/core` (repo
-  `appydave-foundation`, package `@appydave/core`), commit `791e1c9`.
+- `appydave-core-0.2.0-1cd0e79.tgz` (zod 4; `zod` is a **peer dependency**, `^4.0.0`, satisfied by this app's own zod 4)
+- Source: branch `core-0.2.0-zod4` @ `1cd0e79` of `appydave-foundation` (package `@appydave/core`),
+  packed 2026-10-29 from `/Users/davidcruwys/dev/ad/apps/appydave-foundation-worktrees/core-0.2.0-zod4`.
+  0.2.0 is **not yet on npm**. Once it is published: in `create-appytron/src/scaffold.ts` raise the
+  default `coreVersion` from `^0.1.0` to `^0.2.0` (it is both the scaffold's package.json spec and its
+  `appytron.json` `core` marker), and update the two `^0.1.0` assertions in `create-appytron/test/scaffold.test.ts`.
+  `CORE_DEV_DEP` in `scaffold.ts` must always equal this template's package.json spec.
 
 ## Refresh it
 

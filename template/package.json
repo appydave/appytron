@@ -21,8 +21,9 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@appydave/core": "file:vendor/appydave-core-0.1.0-791e1c9.tgz",
+    "@appydave/core": "file:vendor/appydave-core-0.2.0-1cd0e79.tgz",
     "electron-updater": "^6.8.11",
+    "zod": "^4.6.7",
     "zustand": "^5.0.16"
   },
   "devDependencies": {

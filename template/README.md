@@ -33,4 +33,4 @@ During local dev this template references the foundation via a `file:` path
 that is rewritten to the published `@appydave/core@^x.y.z` (mirrors how AppySentinel's CLI
 rewrites `workspace:*` → semver).
 
-**`@appydave/core` is vendored** (`vendor/appydave-core-0.1.0-791e1c9.tgz`, not a `file:../` link) so the template installs from any checkout depth, including git worktrees. Re-vendor when core changes: recipe in `vendor/README.md`.
+**`@appydave/core` is vendored** (`vendor/appydave-core-0.2.0-1cd0e79.tgz`, not a `file:../` link) so the template installs from any checkout depth, including git worktrees. Re-vendor when core changes: recipe in `vendor/README.md`.
