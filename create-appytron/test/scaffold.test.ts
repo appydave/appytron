@@ -27,7 +27,7 @@ describe('scaffold', () => {
 
     const pkg = JSON.parse(await fs.readFile(join(target, 'package.json'), 'utf8'));
     expect(pkg.name).toBe('my-app');
-    expect(pkg.dependencies['@appydave/core']).toBe('^0.1.0');
+    expect(pkg.dependencies['@appydave/core']).toBe('^0.2.0');
 
     for (const f of [
       'electron.vite.config.ts',
@@ -65,7 +65,7 @@ describe('scaffold', () => {
     });
     const b = JSON.parse(await fs.readFile(join(target, 'appytron.json'), 'utf8'));
     expect(b.app).toBe('baseapp');
-    expect(b.core).toBe('^0.1.0');
+    expect(b.core).toBe('^0.2.0');
     expect(b.scaffolded).toBe('2026-03-03T00:00:00Z');
   });
 

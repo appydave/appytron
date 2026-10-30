@@ -111,7 +111,7 @@ function coreLink(templateDir: string, targetDir: string): string {
  */
 export async function scaffold(options: ScaffoldOptions): Promise<ScaffoldResult> {
   const { templateDir, targetDir, appName } = options;
-  const coreVersion = options.coreVersion ?? '^0.1.0';
+  const coreVersion = options.coreVersion ?? '^0.2.0';
   const coreDep = options.linkCore ? coreLink(templateDir, targetDir) : coreVersion;
 
   const { written, skipped } = await copyTree(templateDir, targetDir, {

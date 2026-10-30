@@ -14,7 +14,7 @@ npm run dev
 1. Copies the canonical AppyTron `template/` (skipping `node_modules`, `out`, `dist`, `.git`).
 2. Rewrites placeholders via plain string replacement (no template engine):
    - `package.json` `name` → your app name
-   - `@appydave/core` dev `file:` link → the published semver range (`^0.1.0`, or `--core <version>`)
+   - `@appydave/core` dev `file:` link → the published semver range (`^0.2.0`, or `--core <version>`)
    - the `createConsole({ name })` binding + window title → your app name
 
 ## Publishing note
