@@ -54,8 +54,8 @@ export function ownVersion(): string {
 }
 
 const TEMPLATE_APP_NAME = 'appytron-app';
-// The template vendors @appydave/core (template/vendor/README.md); a scaffold rewrites this to the published version or a link.
-const CORE_DEV_DEP = 'file:vendor/appydave-core-0.2.0-1cd0e79.tgz';
+// The template's own @appydave/core spec (template/package.json); a scaffold rewrites it to the chosen version or a link.
+const CORE_DEV_DEP = '^0.2.0';
 
 interface CopyResult {
   written: string[];

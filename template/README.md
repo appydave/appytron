@@ -33,4 +33,4 @@ During local dev this template references the foundation via a `file:` path
 that is rewritten to the published `@appydave/core@^x.y.z` (mirrors how AppySentinel's CLI
 rewrites `workspace:*` → semver).
 
-**`@appydave/core` is vendored** (`vendor/appydave-core-0.2.0-1cd0e79.tgz`, not a `file:../` link) so the template installs from any checkout depth, including git worktrees. Re-vendor when core changes: recipe in `vendor/README.md`.
+**`@appydave/core` comes from npm** (`^0.2.0`, zod 4 as a peer dependency), so the template installs from any checkout depth, including git worktrees. When core's range changes, change `CORE_DEV_DEP` in `create-appytron/src/scaffold.ts` to match.
