@@ -4,7 +4,7 @@
  * the TypeScript and Oxlint directives are not ESLint's to police, so this is the one guard.
  * Run as `node lint/no-disable-directives.js`; exits 1 and names each hit.
  */
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -44,7 +44,10 @@ export function findDisableDirectives(root) {
   return hits;
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// Compare real paths: argv[1] keeps a symlinked path as typed (macOS /tmp, /var), import.meta.url does not.
+const entry = process.argv[1];
+
+if (entry && realpathSync(entry) === realpathSync(fileURLToPath(import.meta.url))) {
   const hits = findDisableDirectives(resolve(import.meta.dirname, '..'));
 
   for (const hit of hits) {
