@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC, type AppInfo, type AppytronApi } from '../shared/ipc';
+import { IPC, type AppInfo, type AppytronApi } from '@shared/ipc';
 
 const api: AppytronApi = {
   getAppInfo: (): Promise<AppInfo> => ipcRenderer.invoke(IPC.appInfo),

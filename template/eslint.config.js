@@ -9,6 +9,7 @@ import tseslint from 'typescript-eslint';
 import { fileURLToPath } from 'node:url';
 import { sizePlugin, sizeRules } from './lint/size.js';
 import { spacingRules } from './lint/spacing.js';
+import { restrictedSyntax } from './lint/root-imports.js';
 import { TEST_FILES } from './lint/test-scope.js';
 
 const COGNITIVE_MAX = 8;
@@ -56,6 +57,12 @@ export default tseslint.config(
     files: SOURCE,
     plugins: { size: sizePlugin },
     rules: sizeRules,
+  },
+  // G10 root imports: no '../' specifier anywhere (tests included). Listed with G04's member caps.
+  {
+    name: 'quality/root-imports',
+    files: SOURCE,
+    rules: { 'no-restricted-syntax': restrictedSyntax(sizeRules['no-restricted-syntax'].slice(1)) },
   },
 
   // G06 complexity. Cyclomatic (max 6) is owned by Oxlint's `complexity` rule in .oxlintrc.json;

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { IPC, type AppytronApi } from '../src/shared/ipc';
+import { IPC, type AppytronApi } from '@shared/ipc';
 
 // AF3 (audit S1): the preload exposes one API on window.appytron. With contextIsolation on it goes
 // through contextBridge; with it off it falls back to Reflect.set on the shared global. Both are run here.
@@ -14,7 +14,7 @@ function setIsolated(value: boolean | undefined): void {
 
 async function loadPreload(): Promise<void> {
   vi.resetModules();
-  await import('../src/preload/index');
+  await import('@preload/index');
 }
 
 afterEach(() => {

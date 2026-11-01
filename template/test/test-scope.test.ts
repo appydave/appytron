@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { TEST_FILES } from '../lint/test-scope.js';
+import { TEST_FILES } from '@lint/test-scope.js';
 import { errorRuleIds, lint, root } from './helpers/eslint-probe';
 import { oxlintAt } from './helpers/oxlint-probe';
 
