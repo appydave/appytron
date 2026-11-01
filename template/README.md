@@ -1,7 +1,7 @@
 # AppyTron App (template)
 
 The canonical AppyTron scaffold — a **self-contained native desktop app** (Electron) that leans
-on the shared `@appydave/core` foundation. This directory *is the product*: `create-appytron`
+on the shared `@appydave/core` foundation. This directory _is the product_: `create-appytron`
 copies it to make a new app.
 
 ## Stack

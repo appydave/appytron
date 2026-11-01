@@ -53,7 +53,7 @@ export class FileAuthor {
   async write(
     relPath: string,
     content: string | Uint8Array,
-    message?: string,
+    message?: string
   ): Promise<AuthorResult> {
     const abs = this.safe(relPath);
 
@@ -73,8 +73,8 @@ export class FileAuthor {
 
   private async commit(relPath: string, message: string): Promise<AuthorResult> {
     if (!this.git) {
-return { path: relPath, committed: false };
-}
+      return { path: relPath, committed: false };
+    }
 
     try {
       await exec('git', ['add', '--', relPath], { cwd: this.root });
