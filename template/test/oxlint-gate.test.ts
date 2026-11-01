@@ -175,6 +175,19 @@ describe('G02 one owner per rule', () => {
   });
 });
 
+describe('G02 the lint script CI and agents run', () => {
+  // Nothing else reads package.json: drop a command or a flag and every other test stays green.
+  it('is exactly: guard, then Oxlint (deny warnings, readable output), then ESLint (no warnings)', () => {
+    const pkg: { scripts: Record<string, string> } = JSON.parse(
+      readFileSync(join(root, 'package.json'), 'utf8')
+    );
+
+    expect(pkg.scripts.lint).toBe(
+      'node lint/no-disable-directives.js && oxlint --deny-warnings --format=default && eslint . --max-warnings 0'
+    );
+  });
+});
+
 describe('G02 disable-directive guard', () => {
   // Pieces, so this file does not trip the guard it tests.
   const directives = [
@@ -193,6 +206,18 @@ describe('G02 disable-directive guard', () => {
 
     expect(findDisableDirectives(dir)).toEqual([expect.stringMatching(/^src\/a\.ts:2: /)]);
   });
+
+  it.each(['lint/x.js', 'test/x.ts', 'src/main/x.ts', 'electron.vite.config.ts'])(
+    'finds one planted at %s in a scratch copy of the real layout',
+    (file) => {
+      const dir = scratchDir();
+
+      mkdirSync(join(dir, file, '..'), { recursive: true });
+      writeFileSync(join(dir, file), `// ${'@ts' + '-nocheck'}\n`);
+
+      expect(findDisableDirectives(dir)).toEqual([`${file}:1: ${'@ts' + '-nocheck'}`]);
+    }
+  );
 
   it('finds one in a .tsx and a root .js, and ignores node_modules and out', () => {
     const dir = scratchDir();

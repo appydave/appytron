@@ -19,7 +19,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "lint": "node lint/no-disable-directives.js && oxlint --deny-warnings && eslint . --max-warnings 0",
+    "lint": "node lint/no-disable-directives.js && oxlint --deny-warnings --format=default && eslint . --max-warnings 0",
     "format:check": "prettier --check ."
   },
   "dependencies": {
