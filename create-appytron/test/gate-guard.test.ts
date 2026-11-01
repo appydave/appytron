@@ -3,7 +3,7 @@ import { promises as fs } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { classify } from '../src/lib/classify';
-import { GATE_DEV_DEPS, GATE_SCRIPTS } from '../src/lib/gate-manifest';
+import { CREATE_IF_ABSENT, GATE_DEV_DEPS, GATE_SCRIPTS } from '../src/lib/gate-manifest';
 
 const TEMPLATE = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'template');
 
@@ -29,10 +29,14 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
     for (const f of files) expect(classify(`lint/${f}`), f).toBe('auto');
   });
 
-  it('the template gate config files exist and classify auto', async () => {
-    for (const f of ['eslint.config.js', '.prettierrc', '.prettierignore', '.github/workflows/ci.yml']) {
+  it('eslint.config.js is gate-owned (auto); the files an app may already have are create-if-absent and never overwritten', async () => {
+    await fs.access(resolve(TEMPLATE, 'eslint.config.js'));
+    expect(classify('eslint.config.js')).toBe('auto');
+    const created = CREATE_IF_ABSENT.map((c) => c.from);
+    expect(created).toEqual(['gitignore', '.prettierrc', '.prettierignore', '.github/workflows/ci.yml']);
+    for (const f of created) {
       await fs.access(resolve(TEMPLATE, f));
-      expect(classify(f), f).toBe('auto');
+      expect(classify(f), f).toBe('owned');
     }
     expect(classify('.github/pull_request_template.md')).toBe('never');
   });

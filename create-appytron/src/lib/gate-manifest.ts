@@ -15,3 +15,20 @@ export const GATE_DEV_DEPS = [
   'prettier',
   'typescript-eslint',
 ] as const;
+
+/**
+ * Files written only when the app has none (never overwritten: 0.2.0 shipped none of them, so an existing one
+ * is the app's own). `hint` set = a different existing copy also gets an UPGRADE_TODO.md row naming what the
+ * template's adds. Classified `owned`, so the upgrade walk never touches them. Every gate PR that adds a file
+ * the app may already have registers it here; test/gate-guard.test.ts enforces it.
+ */
+export const CREATE_IF_ABSENT: readonly { from: string; to: string; hint?: string }[] = [
+  { from: 'gitignore', to: '.gitignore' },
+  { from: '.prettierrc', to: '.prettierrc', hint: 'the shared Prettier style (single quotes, width 100, es5 commas)' },
+  { from: '.prettierignore', to: '.prettierignore', hint: 'the ignore paths the format check relies on' },
+  {
+    from: '.github/workflows/ci.yml',
+    to: '.github/workflows/ci.yml',
+    hint: 'the lint, format check, typecheck, test and build steps',
+  },
+];

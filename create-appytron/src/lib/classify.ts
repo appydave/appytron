@@ -21,12 +21,9 @@ const AUTO = new Set([
   'src/main/updater.ts',
   'src/preload/index.ts',
   'src/preload/index.d.ts',
-  // Gate files (ladder). Each later gate adds its own file here in the same PR; test/gate-guard.test.ts enforces it.
+  // Gate-owned files (ladder). Each later gate adds its own here in the same PR (or to CREATE_IF_ABSENT when an app may already have one); test/gate-guard.test.ts enforces it.
   // Not yet shipped by the template, so not listed: .oxlintrc.json, .jscpd.json, .dependency-cruiser.cjs.
   'eslint.config.js',
-  '.prettierrc',
-  '.prettierignore',
-  '.github/workflows/ci.yml',
 ]);
 
 /**
@@ -43,6 +40,10 @@ const OWNED = new Set([
   // The ignore file is the app's once scaffolded: a customised one must survive an upgrade. Template name and generated name.
   'gitignore',
   '.gitignore',
+  // Create-if-absent files (CREATE_IF_ABSENT in gate-manifest.ts): written once when the app has none, never overwritten.
+  '.prettierrc',
+  '.prettierignore',
+  '.github/workflows/ci.yml',
 ]);
 
 /**

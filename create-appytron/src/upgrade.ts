@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs';
 import { join, relative, dirname } from 'node:path';
 import { classify, type Tier } from './lib/classify.js';
+import { CREATE_IF_ABSENT } from './lib/gate-manifest.js';
 import { mergeGatePackage, type Pkg } from './lib/merge-package.js';
 
 const SKIP_DIRS = new Set([
@@ -110,19 +111,34 @@ export interface RunUpgradeResult extends ApplyResult {
 }
 
 const TODO_FILE = 'UPGRADE_TODO.md';
-const TODO_HEADER = '# Upgrade to-do\n\nThe last `appytron-upgrade` left these package.json entries as you have them:\n\n';
+const TODO_HEADER = '# Upgrade to-do\n\nThe last `appytron-upgrade` left these as you have them:\n\n';
 
-/** Create-if-absent: the template's `gitignore` becomes `.gitignore` only when the app has none. */
-async function ensureGitignore(templateDir: string, targetDir: string): Promise<boolean> {
-  const to = join(targetDir, '.gitignore');
-  if ((await read(to)) !== null) return false;
-  const body = await read(join(templateDir, 'gitignore'));
-  if (body === null) return false;
-  await fs.writeFile(to, body);
-  return true;
+/**
+ * Create-if-absent: write the template's copy only when the app has none. A different copy is the
+ * app's own and stays; entries with a `hint` also return a to-do row naming what the template's adds.
+ */
+async function createIfAbsent(
+  templateDir: string,
+  targetDir: string,
+): Promise<{ written: string[]; rows: string[] }> {
+  const written: string[] = [];
+  const rows: string[] = [];
+  for (const { from, to, hint } of CREATE_IF_ABSENT) {
+    const body = await read(join(templateDir, from));
+    if (body === null) continue;
+    const current = await read(join(targetDir, to));
+    if (current === null) {
+      await fs.mkdir(dirname(join(targetDir, to)), { recursive: true });
+      await fs.writeFile(join(targetDir, to), body);
+      written.push(to);
+    } else if (hint !== undefined && current !== body) {
+      rows.push(`- ${to}: yours differs from the framework's, so it was left as it is. The framework's version adds ${hint}; compare it with \`appytron-upgrade\`'s template copy and merge what you want.`);
+    }
+  }
+  return { written, rows };
 }
 
-/** Add the gate scripts/devDependencies the app lacks (never replacing a value), and log customised ones. */
+/** Add the gate scripts/devDependencies the app lacks (never replacing a value); returns rows for customised ones. */
 async function mergeGateEntries(templateDir: string, targetDir: string): Promise<string[]> {
   const pkgPath = join(targetDir, 'package.json');
   const appRaw = await read(pkgPath);
@@ -130,9 +146,14 @@ async function mergeGateEntries(templateDir: string, targetDir: string): Promise
   const template = JSON.parse((await read(join(templateDir, 'package.json'))) ?? '{}') as Pkg;
   const { pkg, added, todo } = mergeGatePackage(template, JSON.parse(appRaw) as Pkg);
   if (added.length > 0) await fs.writeFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+  return todo;
+}
+
+/** Append the rows not already in UPGRADE_TODO.md (created only when there is one); returns the new rows. */
+async function writeTodo(targetDir: string, rows: string[]): Promise<string[]> {
   const todoPath = join(targetDir, TODO_FILE);
   const existing = await read(todoPath);
-  const fresh = todo.filter((row) => !(existing ?? '').includes(row));
+  const fresh = rows.filter((row) => !(existing ?? '').includes(row));
   if (fresh.length > 0) {
     await fs.writeFile(todoPath, `${existing ?? TODO_HEADER}${fresh.join('\n')}\n`);
   }
@@ -156,8 +177,9 @@ export async function runUpgrade(
 
   const plan = await planUpgrade(templateDir, targetDir);
   const result = await applyUpgrade(plan, templateDir, targetDir, options);
-  if (await ensureGitignore(templateDir, targetDir)) result.applied.push('.gitignore');
-  const todo = await mergeGateEntries(templateDir, targetDir);
+  const created = await createIfAbsent(templateDir, targetDir);
+  result.applied.push(...created.written);
+  const todo = await writeTodo(targetDir, [...(await mergeGateEntries(templateDir, targetDir)), ...created.rows]);
 
   const baseline = JSON.parse(baselineRaw) as Record<string, unknown>;
   baseline['lastUpgrade'] = options.now ?? new Date().toISOString();

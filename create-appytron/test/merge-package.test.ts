@@ -97,4 +97,34 @@ describe('runUpgrade: package.json merge, UPGRADE_TODO.md, .gitignore create-if-
     await runUpgrade(TEMPLATE, app);
     await expect(fs.access(join(app, 'UPGRADE_TODO.md'))).rejects.toThrow();
   });
+
+  it.each(['.prettierrc', '.prettierignore', '.github/workflows/ci.yml'])('%s: absent -> written from the template', async (f) => {
+    const res = await runUpgrade(TEMPLATE, app);
+    expect(res.applied).toContain(f);
+    expect(await fs.readFile(join(app, f), 'utf8')).toBe(await fs.readFile(join(TEMPLATE, f), 'utf8'));
+  });
+
+  it.each(['.prettierrc', '.prettierignore', '.github/workflows/ci.yml'])('%s: present and different -> left as is, one to-do row', async (f) => {
+    await fs.mkdir(dirname(join(app, f)), { recursive: true });
+    await fs.writeFile(join(app, f), '# the app own\n');
+    const res = await runUpgrade(TEMPLATE, app);
+    expect(res.applied).not.toContain(f);
+    expect(await fs.readFile(join(app, f), 'utf8')).toBe('# the app own\n');
+    expect(res.todo.filter((r) => r.startsWith(`- ${f}: yours differs`))).toHaveLength(1);
+    expect((await runUpgrade(TEMPLATE, app)).todo.filter((r) => r.startsWith(`- ${f}:`))).toEqual([]);
+  });
+
+  it.each(['.prettierrc', '.prettierignore', '.github/workflows/ci.yml'])('%s: present and identical -> nothing', async (f) => {
+    await fs.mkdir(dirname(join(app, f)), { recursive: true });
+    await fs.copyFile(join(TEMPLATE, f), join(app, f));
+    const res = await runUpgrade(TEMPLATE, app);
+    expect(res.applied).not.toContain(f);
+    expect(res.todo.filter((r) => r.startsWith(`- ${f}:`))).toEqual([]);
+  });
+
+  it('eslint.config.js stays auto: a customised copy is overwritten', async () => {
+    await fs.writeFile(join(app, 'eslint.config.js'), '// mine\n');
+    const res = await runUpgrade(TEMPLATE, app);
+    expect(res.applied).toContain('eslint.config.js');
+  });
 });
