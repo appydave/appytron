@@ -1,31 +1,13 @@
-import { resolve } from 'node:path';
-import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
+import { errorRuleIds } from './helpers/eslint-probe';
 
 // Runs the real eslint.config.js over probe text, so the test proves the gate is wired, not the rules.
-const root = resolve(import.meta.dirname, '..');
-const ERROR = 2;
-// With CI set, typescript-eslint assumes a one-shot run and reads each file from disk, ignoring the
-// probe text lintText is given. Turning that inference off makes the probe text count everywhere.
-const eslint = new ESLint({
-  cwd: root,
-  overrideConfig: {
-    languageOptions: { parserOptions: { disallowAutomaticSingleRunInference: true } },
-  },
-});
-
 // Existing paths, because type-aware parsing needs a file a tsconfig includes; the text is the probe.
 const MAIN = 'src/main/index.ts';
 const RENDERER = 'src/renderer/src/App.tsx';
 const TEST = 'test/eslint-spacing.test.ts';
 
-async function errors(source: string, file = MAIN): Promise<string[]> {
-  const [result] = await eslint.lintText(source, { filePath: resolve(root, file) });
-
-  return (result?.messages ?? [])
-    .filter((message) => message.severity === ERROR)
-    .map((message) => message.ruleId ?? 'parse-error');
-}
+const errors = (source: string, file = MAIN) => errorRuleIds(source, file);
 
 // Spelled in two pieces so the no-disable-directives guard does not flag this file.
 const DISABLE = 'eslint' + '-disable';
