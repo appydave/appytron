@@ -50,6 +50,26 @@ const wrapped = (opener: string, closer: string, total: number) =>
 const members = (n: number, line: (i: number) => string) =>
   Array.from({ length: n }, (_, i) => line(i)).join('\n');
 
+// A4: G04 proved the limits on .ts only. The size block must also cover plain JavaScript: lint/ scripts and
+// the root configs are .js and .mjs. Mutant C06 scopes the block to *.ts; these probes then fail.
+describe('A4 size limits apply to JavaScript files too', () => {
+  const tooLong = wrapped('function f() {', '}', 61);
+  const tooManyParams = 'function f(a, b, c, d, e) {\n  return [a, b, c, d, e];\n}\n';
+
+  it.each(['lint/probe.js', 'eslint.probe.config.js', 'lint/probe.mjs', 'lint/probe.cjs'])(
+    '%s fails a 61-line function and 5 parameters, and names the rule',
+    async (file) => {
+      expect(await count(tooLong, FUNCTION_RULE, file)).toBe(1);
+      expect(await count(tooManyParams, 'max-params', file)).toBe(1);
+    }
+  );
+
+  it('fails a file over 300 counted lines in a .js file', async () => {
+    expect(await count(statements(301), 'max-lines', 'lint/probe.js')).toBe(1);
+    expect(await count(statements(300), 'max-lines', 'lint/probe.js')).toBe(0);
+  });
+});
+
 describe('G04 size gate, run through the real eslint.config.js', () => {
   it('allows a 60-line function and rejects a 61-line one', async () => {
     expect(await count(wrapped('export function f() {', '}', 60), FUNCTION_RULE)).toBe(0);
