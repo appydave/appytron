@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Scaffold job: build create-appytron from this checkout, scaffold a fresh app from this checkout's
-# template/ into a temp dir, and run that app's own install, typecheck, test, build and lint.
+# template/ into a temp dir, and run that app's own install, typecheck, test, build, lint and format:check.
 # The template's own checks run against template/ in place; this runs them against what a user
 # actually receives, so a file the scaffold drops or renames cannot hide behind a green template job.
 # Usage: .github/scripts/scaffold-check.sh [work-dir]   (default: a fresh mktemp -d)
@@ -33,3 +33,4 @@ npm run typecheck
 npm test
 npm run build
 npm run lint
+npm run format:check
