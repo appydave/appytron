@@ -58,4 +58,17 @@ describe('IpcRouter', () => {
 
     expect(handlers.size).toBe(0);
   });
+
+  it('forgets its channels on dispose, so a second dispose is a no-op', () => {
+    const router = new IpcRouter();
+
+    router.register({ channel: 'a', handle: () => 1 });
+    router.dispose();
+
+    // Another owner takes the channel after the first dispose; a second dispose must leave it alone.
+    handlers.set('a', () => Promise.resolve('theirs'));
+    router.dispose();
+
+    expect(handlers.has('a')).toBe(true);
+  });
 });
