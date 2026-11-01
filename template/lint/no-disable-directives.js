@@ -13,7 +13,9 @@ const DIRECTIVES = ['eslint', 'oxlint']
   .map((tool) => `${tool}-disable`)
   .concat(['ignore', 'expect-error', 'nocheck'].map((name) => `@ts-${name}`))
   // G08: jscpd's own ignore markers (`ignore-start`, `ignore-next`, ...) hide a duplicate from the gate.
-  .concat(['jscpd'].map((tool) => `${tool}:ignore`));
+  .concat(['jscpd'].map((tool) => `${tool}:ignore`))
+  // G11: Knip's JSDoc tags exempt an export from the dead-code check.
+  .concat(['public', 'internal', 'beta', 'alias'].map((tag) => `@${tag}`));
 const SKIP_DIRS = new Set(['node_modules', 'out', 'dist', 'coverage', '.git', '.claude']);
 const SOURCE = /\.(?:[cm]?[jt]s|[jt]sx)$/;
 

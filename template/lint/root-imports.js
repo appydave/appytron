@@ -7,13 +7,13 @@
 const PARENT = String.raw`/^(\.\/+)*\.\.(\/|$)/`;
 const MOCKS = 'mock|doMock|unmock|doUnmock|importActual|importMock|requireActual|requireMock';
 
-export const PARENT_IMPORT_MESSAGE =
+const PARENT_IMPORT_MESSAGE =
   "No '../' imports: use a root alias. @shared/* is src/shared, @/* is src/renderer/src; in tests also @main/* (src/main), @preload/* (src/preload), @lint/* (lint), @root/* (the project root). A file in the same folder stays './x'.";
 
 const parentSpecifier = (node, path) =>
   `${node}:matches([${path}.value=${PARENT}], [${path}.quasis.0.value.cooked=${PARENT}])`;
 
-export const parentImportSelectors = [
+const parentImportSelectors = [
   parentSpecifier('ImportDeclaration', 'source'),
   parentSpecifier('ExportAllDeclaration', 'source'),
   parentSpecifier('ExportNamedDeclaration', 'source'),

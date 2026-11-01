@@ -34,4 +34,5 @@ npm test
 npm run build
 npm run lint
 npm run dup
+npm run deadcode
 npm run format:check

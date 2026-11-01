@@ -132,6 +132,7 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
   it.each([
     'Complexity limits are fixed the same way: a function over cyclomatic 6 (Oxlint `complexity`), cognitive 8 or an expression with more than 3 boolean operators (SonarJS) is split by hand, never suppressed.',
     'Duplicates are fixed the same way: `npm run dup` fails on a block of more than 5 lines and 50 tokens repeated in source, or in tests (judged apart); extract the shared code into one function or helper.',
+    'Dead code and cycles are fixed the same way: `npm run deadcode` (Knip, dependency-cruiser) fails on an unused file, export or dependency and on an import cycle; delete the dead code, or break the cycle by moving the shared piece into a third file.',
     'Parent-relative imports are fixed by alias: a `../` specifier fails lint; write `@shared/x` (src/shared), `@main/x`, `@preload/x`, `@lint/x` or `@root/x` in tests, `@/x` in the renderer. This upgrade replaced electron.vite.config.ts and vitest.config.ts, so re-add any alias of your own there.',
   ])('the ci.yml onWrite row says: %s', (sentence) => {
     const row = CREATE_IF_ABSENT.find((c) => c.to === '.github/workflows/ci.yml')?.onWrite;
@@ -141,6 +142,22 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
   // An upgraded app keeps its own ci.yml (never overwritten), so this sentence is the only thing that makes it run the gate.
   it('the scripts.dup note tells an upgraded app to put `npm run dup` in its CI', () => {
     expect(ADDED_ENTRY_NOTES['scripts.dup']).toContain('Add `npm run dup` to your CI after `npm run lint`');
+  });
+
+  it('the scripts.deadcode note tells an upgraded app to put `npm run deadcode` in its CI and names the exemption', () => {
+    const note = ADDED_ENTRY_NOTES['scripts.deadcode'];
+
+    expect(note).toContain('Add `npm run deadcode` to your CI after `npm run dup`');
+    expect(note).toContain('src/main/updater.ts with electron-updater');
+  });
+
+  it('the deadcode script, Knip, dependency-cruiser and both configs are registered, so an upgrade carries them', async () => {
+    expect(GATE_SCRIPTS).toContain('deadcode');
+    expect(GATE_DEV_DEPS).toEqual(expect.arrayContaining(['knip', 'dependency-cruiser']));
+    for (const f of ['knip.json', '.dependency-cruiser.cjs']) {
+      await fs.access(resolve(TEMPLATE, f));
+      expect(classify(f), f).toBe('auto');
+    }
   });
 
   it('the dup script, jscpd and both configs are registered, so an upgrade carries them', async () => {
@@ -157,7 +174,7 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
     const repo = resolve(TEMPLATE, '..');
     const ci = await fs.readFile(resolve(repo, '.github/workflows/ci.yml'), 'utf8');
     const scaffold = await fs.readFile(resolve(repo, '.github/scripts/scaffold-check.sh'), 'utf8');
-    expect(ci).toContain('      - run: npm run lint\n      - run: npm run dup\n');
-    expect(scaffold).toContain('npm run lint\nnpm run dup\n');
+    expect(ci).toContain('      - run: npm run lint\n      - run: npm run dup\n      - run: npm run deadcode\n');
+    expect(scaffold).toContain('npm run lint\nnpm run dup\nnpm run deadcode\n');
   });
 });
