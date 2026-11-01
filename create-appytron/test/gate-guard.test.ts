@@ -127,4 +127,31 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
     for (const s of GATE_SCRIPTS) expect(scripts[s], s).toBeDefined();
     for (const d of GATE_DEV_DEPS) expect(devDependencies[d], d).toBeDefined();
   });
+
+  // The row an app owner reads after the upgrade writes ci.yml: each gate's sentence is part of the contract.
+  it.each([
+    'Complexity limits are fixed the same way: a function over cyclomatic 6 (Oxlint `complexity`), cognitive 8 or an expression with more than 3 boolean operators (SonarJS) is split by hand, never suppressed.',
+    'Duplicates are fixed the same way: `npm run dup` fails on a block of more than 5 lines and 50 tokens repeated in source, or in tests (judged apart); extract the shared code into one function or helper.',
+  ])('the ci.yml onWrite row says: %s', (sentence) => {
+    const row = CREATE_IF_ABSENT.find((c) => c.to === '.github/workflows/ci.yml')?.onWrite;
+    expect(row).toContain(sentence);
+  });
+
+  it('the dup script, jscpd and both configs are registered, so an upgrade carries them', async () => {
+    expect(GATE_SCRIPTS).toContain('dup');
+    expect(GATE_DEV_DEPS).toContain('jscpd');
+    for (const f of ['.jscpd.json', '.jscpd.tests.json', 'lint/test-scope.js']) {
+      await fs.access(resolve(TEMPLATE, f));
+      expect(classify(f), f).toBe('auto');
+    }
+  });
+
+  // CI files outside template/ cannot be read by the template's own tests (they ship into generated apps).
+  it('the repo CI and the scaffold check run `npm run dup` right after lint', async () => {
+    const repo = resolve(TEMPLATE, '..');
+    const ci = await fs.readFile(resolve(repo, '.github/workflows/ci.yml'), 'utf8');
+    const scaffold = await fs.readFile(resolve(repo, '.github/scripts/scaffold-check.sh'), 'utf8');
+    expect(ci).toContain('      - run: npm run lint\n      - run: npm run dup\n');
+    expect(scaffold).toContain('npm run lint\nnpm run dup\n');
+  });
 });
