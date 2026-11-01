@@ -4,7 +4,9 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ESLint } from 'eslint';
+import { TEST_FILES } from '../lint/test-scope.js';
 import { findDisableDirectives } from '../lint/no-disable-directives.js';
+import { oxlintAt } from './helpers/oxlint-probe';
 
 const root = resolve(import.meta.dirname, '..');
 const oxlint = resolve(root, 'node_modules/.bin/oxlint');
@@ -78,27 +80,6 @@ const config: unknown = JSON.parse(
 const EXEMPT = 'src/main/ipc-router.ts';
 const CAST = 'declare const v: unknown;\nexport const s = v as string;\n';
 
-// Overrides match paths relative to the config, so the probe gets a scratch copy of the real config
-// with the file at the path under test (never planted in the real template: other tests read it).
-function oxlintAt(file: string, source: string): { failed: boolean; output: string } {
-  const dir = scratchDir();
-
-  mkdirSync(join(dir, file, '..'), { recursive: true });
-  writeFileSync(join(dir, '.oxlintrc.json'), readFileSync(join(root, '.oxlintrc.json')));
-  writeFileSync(join(dir, file), source);
-
-  const run = spawnSync(
-    oxlint,
-    ['--deny-warnings', '--format=default', '-c', '.oxlintrc.json', '.'],
-    {
-      cwd: dir,
-      encoding: 'utf8',
-    }
-  );
-
-  return { failed: run.status !== 0, output: run.stdout };
-}
-
 function configFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     if (entry.isDirectory()) {
@@ -135,7 +116,7 @@ describe('G02 Oxlint allowlist: one file may cast, nothing else', () => {
         ],
       },
       overrides: [
-        { files: ['test/**'], rules: { 'no-magic-numbers': 'off', complexity: 'off' } },
+        { files: TEST_FILES, rules: { 'no-magic-numbers': 'off', complexity: 'off' } },
         { files: [EXEMPT], rules: { 'typescript/consistent-type-assertions': 'off' } },
       ],
     });
@@ -260,9 +241,10 @@ describe('G06 cyclomatic complexity, run through the real .oxlintrc.json', () =>
     expect(oxlintAt(file, ifs(MAX).replace(': number', '')).output).toContain('complexity of 7');
   });
 
-  it('is out of scope in test/ only', () => {
+  // The test definition is pinned in test-scope.test.ts; here only that a look-alike stays in scope.
+  it('is out of scope in test code only', () => {
     expect(oxlintAt('test/probe.test.ts', ifs(MAX)).failed).toBe(false);
-    expect(oxlintAt('src/test/probe.ts', ifs(MAX)).failed).toBe(true);
+    expect(oxlintAt('src/main/contest.ts', ifs(MAX)).failed).toBe(true);
   });
 
   it('fails in the exempt cast file too: the exemption is for assertions only', () => {
@@ -314,6 +296,8 @@ describe('G02 disable-directive guard', () => {
     '@ts' + '-ignore',
     '@ts' + '-expect-error',
     '@ts' + '-nocheck',
+    'jscpd' + ':ignore-start',
+    'jscpd' + ':ignore-next-line',
   ];
 
   it.each(directives)('finds %s in source, with its file and line', (directive) => {

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { classify } from '../src/lib/classify';
-import { CREATE_IF_ABSENT, GATE_DEV_DEPS, GATE_SCRIPTS } from '../src/lib/gate-manifest';
+import { ADDED_ENTRY_NOTES, CREATE_IF_ABSENT, GATE_DEV_DEPS, GATE_SCRIPTS } from '../src/lib/gate-manifest';
 
 const TEMPLATE = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'template');
 
@@ -126,5 +126,37 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
     const { scripts, devDependencies } = await templatePackage();
     for (const s of GATE_SCRIPTS) expect(scripts[s], s).toBeDefined();
     for (const d of GATE_DEV_DEPS) expect(devDependencies[d], d).toBeDefined();
+  });
+
+  // The row an app owner reads after the upgrade writes ci.yml: each gate's sentence is part of the contract.
+  it.each([
+    'Complexity limits are fixed the same way: a function over cyclomatic 6 (Oxlint `complexity`), cognitive 8 or an expression with more than 3 boolean operators (SonarJS) is split by hand, never suppressed.',
+    'Duplicates are fixed the same way: `npm run dup` fails on a block of more than 5 lines and 50 tokens repeated in source, or in tests (judged apart); extract the shared code into one function or helper.',
+  ])('the ci.yml onWrite row says: %s', (sentence) => {
+    const row = CREATE_IF_ABSENT.find((c) => c.to === '.github/workflows/ci.yml')?.onWrite;
+    expect(row).toContain(sentence);
+  });
+
+  // An upgraded app keeps its own ci.yml (never overwritten), so this sentence is the only thing that makes it run the gate.
+  it('the scripts.dup note tells an upgraded app to put `npm run dup` in its CI', () => {
+    expect(ADDED_ENTRY_NOTES['scripts.dup']).toContain('Add `npm run dup` to your CI after `npm run lint`');
+  });
+
+  it('the dup script, jscpd and both configs are registered, so an upgrade carries them', async () => {
+    expect(GATE_SCRIPTS).toContain('dup');
+    expect(GATE_DEV_DEPS).toContain('jscpd');
+    for (const f of ['.jscpd.json', '.jscpd.tests.json', 'lint/test-scope.js']) {
+      await fs.access(resolve(TEMPLATE, f));
+      expect(classify(f), f).toBe('auto');
+    }
+  });
+
+  // CI files outside template/ cannot be read by the template's own tests (they ship into generated apps).
+  it('the repo CI and the scaffold check run `npm run dup` right after lint', async () => {
+    const repo = resolve(TEMPLATE, '..');
+    const ci = await fs.readFile(resolve(repo, '.github/workflows/ci.yml'), 'utf8');
+    const scaffold = await fs.readFile(resolve(repo, '.github/scripts/scaffold-check.sh'), 'utf8');
+    expect(ci).toContain('      - run: npm run lint\n      - run: npm run dup\n');
+    expect(scaffold).toContain('npm run lint\nnpm run dup\n');
   });
 });

@@ -1,25 +1,17 @@
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
+import { TEST_FILES } from '../lint/test-scope.js';
+import { ERROR, errorMessages, eslint, root } from './helpers/eslint-probe';
+import { installedVersion, manifest } from './helpers/manifest';
 
 // G06: cognitive and expression complexity (SonarJS) as ESLint applies them through the real
 // eslint.config.js. Cyclomatic is Oxlint's; its probes are in oxlint-gate.test.ts.
-const root = resolve(import.meta.dirname, '..');
-const ERROR = 2;
 const COGNITIVE = 'sonarjs/cognitive-complexity';
 const EXPRESSION = 'sonarjs/expression-complexity';
 const COGNITIVE_MAX = 8;
 const EXPRESSION_OPERATORS_MAX = 3;
-// CI makes typescript-eslint read files from disk and ignore lintText text; turn that inference off.
 // The probe paths are real files, so each one sits in the tsconfig its environment names.
-const eslint = new ESLint({
-  cwd: root,
-  overrideConfig: {
-    languageOptions: { parserOptions: { disallowAutomaticSingleRunInference: true } },
-  },
-});
-
 const MAIN = 'src/main/index.ts';
 const PRELOAD = 'src/preload/index.ts';
 const RENDERER = 'src/renderer/src/App.tsx';
@@ -28,14 +20,8 @@ const ROOT_CONFIG = 'eslint.config.js';
 const TEST = 'test/oxlint-gate.test.ts';
 const VITEST_CONFIG = 'vitest.config.ts';
 
-async function messages(source: string, file: string) {
-  const [result] = await eslint.lintText(source, { filePath: resolve(root, file) });
-
-  return (result?.messages ?? []).filter((message) => message.severity === ERROR);
-}
-
 async function count(rule: string, source: string, file = MAIN): Promise<number> {
-  return (await messages(source, file)).filter((message) => message.ruleId === rule).length;
+  return (await errorMessages(source, file)).filter((message) => message.ruleId === rule).length;
 }
 
 // n sequential ifs: cognitive n.
@@ -86,8 +72,8 @@ describe('G06 cognitive and expression gates, run through the real eslint.config
   });
 
   it('tells the agent to refactor, with both numbers', async () => {
-    const [cognitive] = await messages(ifs(COGNITIVE_MAX + 1), MAIN);
-    const [expression] = await messages(chain(EXPRESSION_OPERATORS_MAX + 2), MAIN);
+    const [cognitive] = await errorMessages(ifs(COGNITIVE_MAX + 1), MAIN);
+    const [expression] = await errorMessages(chain(EXPRESSION_OPERATORS_MAX + 2), MAIN);
 
     expect(cognitive?.message).toBe(
       'Refactor this function to reduce its Cognitive Complexity from 9 to the 8 allowed.'
@@ -106,7 +92,7 @@ describe('G06 the reviewed ESLint complexity block', () => {
     expect(rest).toEqual({
       name: 'quality/complexity',
       files: ['**/*.{ts,tsx,js,mjs,cjs}'],
-      ignores: ['**/*.test.*', '**/test/**'],
+      ignores: TEST_FILES,
       rules: {
         [COGNITIVE]: ['error', COGNITIVE_MAX],
         [EXPRESSION]: ['error', { max: EXPRESSION_OPERATORS_MAX }],
@@ -135,5 +121,12 @@ describe('G06 the reviewed ESLint complexity block', () => {
     expect(on.filter((name) => name.startsWith('sonarjs/'))).toEqual([COGNITIVE, EXPRESSION]);
     // One owner per metric: ESLint's own copy is off (eslint-plugin-oxlint), SonarJS's is never on.
     expect(on).not.toContain('complexity');
+  });
+
+  // SonarJS's rule behaviour changes between versions, so the version is part of the gate: exact, never a
+  // range, and the installed copy is the one pinned (a stale node_modules would otherwise lint with another).
+  it('pins eslint-plugin-sonarjs to exactly 4.2.2, and that is the installed version', () => {
+    expect(manifest().devDependencies['eslint-plugin-sonarjs']).toBe('4.2.2');
+    expect(installedVersion('eslint-plugin-sonarjs')).toBe('4.2.2');
   });
 });

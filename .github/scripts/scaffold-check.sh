@@ -33,4 +33,5 @@ npm run typecheck
 npm test
 npm run build
 npm run lint
+npm run dup
 npm run format:check

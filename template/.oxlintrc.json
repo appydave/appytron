@@ -20,8 +20,9 @@
   "overrides": [
     {
       // Tests out of scope (settings, G05, G06): fixtures and expected values are literals by nature,
-      // and a probe is allowed to be as branchy as the code it plants.
-      "files": ["test/**"],
+      // and a probe is allowed to be as branchy as the code it plants. The same list as TEST_FILES in
+      // lint/test-scope.js (JSON cannot import it); test/test-scope.test.ts fails if the two differ.
+      "files": ["**/*.test.*", "**/test/**"],
       "rules": { "no-magic-numbers": "off", "complexity": "off" }
     },
     {

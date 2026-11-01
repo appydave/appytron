@@ -1,0 +1,17 @@
+{
+  "path": ["."],
+  "format": ["typescript", "tsx", "javascript", "jsx"],
+  "minLines": 5,
+  "minTokens": 50,
+  "threshold": 0,
+  "reporters": ["console"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/out/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/.claude/**",
+    "**/*.test.*",
+    "**/test/**"
+  ]
+}

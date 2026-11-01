@@ -1,22 +1,12 @@
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
-import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
+import { ERROR, errorRuleIds, eslint, root } from './helpers/eslint-probe';
 
 // A2: pins what ESLint and Oxlint actually apply per environment, so dropping a block, a preset or the
 // oxlint spread fails here. The .oxlintrc.json body and the lint script string are pinned in
 // oxlint-gate.test.ts; this file does not repeat them.
-const root = resolve(import.meta.dirname, '..');
-const ERROR = 2;
 const OFF = 0;
-// CI makes typescript-eslint read files from disk and ignore lintText text; turn that inference off.
-const eslint = new ESLint({
-  cwd: root,
-  overrideConfig: {
-    languageOptions: { parserOptions: { disallowAutomaticSingleRunInference: true } },
-  },
-});
-
 const MAIN = 'src/main/index.ts';
 const PRELOAD = 'src/preload/index.ts';
 const RENDERER = 'src/renderer/src/App.tsx';
@@ -32,13 +22,7 @@ async function severity(file: string, rule: string): Promise<unknown> {
   return Array.isArray(entry) ? entry[0] : entry;
 }
 
-async function errors(source: string, file: string): Promise<string[]> {
-  const [result] = await eslint.lintText(source, { filePath: resolve(root, file) });
-
-  return (result?.messages ?? [])
-    .filter((message) => message.severity === ERROR)
-    .map((message) => message.ruleId ?? 'parse-error');
-}
+const errors = errorRuleIds;
 
 const oxlintRules = JSON.parse(
   spawnSync(resolve(root, 'node_modules/.bin/oxlint'), ['-c', '.oxlintrc.json', '--print-config'], {

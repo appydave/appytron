@@ -11,7 +11,9 @@ import { fileURLToPath } from 'node:url';
 // Built from pieces so this file does not trip its own guard.
 const DIRECTIVES = ['eslint', 'oxlint']
   .map((tool) => `${tool}-disable`)
-  .concat(['ignore', 'expect-error', 'nocheck'].map((name) => `@ts-${name}`));
+  .concat(['ignore', 'expect-error', 'nocheck'].map((name) => `@ts-${name}`))
+  // G08: jscpd's own ignore markers (`ignore-start`, `ignore-next`, ...) hide a duplicate from the gate.
+  .concat(['jscpd'].map((tool) => `${tool}:ignore`));
 const SKIP_DIRS = new Set(['node_modules', 'out', 'dist', 'coverage', '.git', '.claude']);
 const SOURCE = /\.(?:[cm]?[jt]s|[jt]sx)$/;
 

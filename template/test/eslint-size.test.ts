@@ -3,17 +3,9 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
+import { ERROR, errorRuleIds, lint, root } from './helpers/eslint-probe';
 
 // Runs the real eslint.config.js over probe text, so the test proves the gate is wired, not the rules.
-const root = resolve(import.meta.dirname, '..');
-const ERROR = 2;
-// With CI set, typescript-eslint reads files from disk and ignores the probe text; turn that off.
-const eslint = new ESLint({
-  cwd: root,
-  overrideConfig: {
-    languageOptions: { parserOptions: { disallowAutomaticSingleRunInference: true } },
-  },
-});
 
 // Existing paths where type-aware parsing needs a file a tsconfig includes; the text is the probe.
 const MAIN = 'src/main/index.ts';
@@ -25,19 +17,14 @@ const PLAIN = 'lint/probe.ts';
 const FUNCTION_RULE = 'size/max-lines-per-function';
 
 async function ruleIds(source: string, file = PLAIN): Promise<string[]> {
-  const [result] = await eslint.lintText(source, { filePath: resolve(root, file) });
-
   // A probe that does not parse proves nothing (every count would be zero): fail loudly.
-  const fatal = result?.messages.find((message) => message.fatal);
+  const fatal = (await lint(source, file)).find((message) => message.fatal);
 
   if (fatal) {
     throw new Error(`probe did not parse: ${fatal.message}`);
   }
 
-  // Only errors count: a rule downgraded to a warning prints but does not fail the build.
-  return (result?.messages ?? [])
-    .filter((message) => message.severity === ERROR)
-    .map((message) => message.ruleId ?? 'parse-error');
+  return errorRuleIds(source, file);
 }
 
 const count = async (source: string, rule: string, file?: string) =>
@@ -111,8 +98,7 @@ describe('G04 size gate, run through the real eslint.config.js', () => {
     ],
   ])('members of %s', (_name, make) => {
     it('allows 30 and rejects 31, with a message that says what to do', async () => {
-      const [result] = await eslint.lintText(make(31), { filePath: resolve(root, MAIN) });
-      const hit = result?.messages.find((m) => m.ruleId === 'no-restricted-syntax');
+      const hit = (await lint(make(31), MAIN)).find((m) => m.ruleId === 'no-restricted-syntax');
 
       expect(await count(make(30), 'no-restricted-syntax', MAIN)).toBe(0);
       expect(hit?.severity).toBe(ERROR);
