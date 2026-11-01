@@ -34,6 +34,7 @@ cd "${APP}"
 node "${ROOT}/create-appytron/dist/upgrade-cli.js"
 test -f lint/spacing.js || { echo "upgrade did not bring lint/spacing.js"; exit 1; }
 test -f .gitignore || { echo "upgrade did not create .gitignore"; exit 1; }
+grep -q 'npm run lint -- --fix' UPGRADE_TODO.md || { echo "upgrade wrote ci.yml but left no fix row in UPGRADE_TODO.md"; exit 1; }
 
 echo "== install, then lint / typecheck / build"
 npm install --no-audit --no-fund

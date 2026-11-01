@@ -21,14 +21,14 @@ const APP_OWN_DEV_DEPS = [
 /** Template files that are the app's own or never upgraded (everything else at the root, in lint/ or in .github/ must be registered). */
 const APP_OWN_FILES = ['README.md', 'package-lock.json', '.github/pull_request_template.md'];
 
-/** Files at the template root, plus everything under lint/ and .github/ (any extension). */
+/** Files at the template root, plus everything (recursively) under lint/ and .github/. */
 async function gateSurface(): Promise<string[]> {
   const out: string[] = [];
   const walk = async (rel: string): Promise<void> => {
     for (const e of await fs.readdir(resolve(TEMPLATE, rel), { withFileTypes: true })) {
       const path = rel === '' ? e.name : `${rel}/${e.name}`;
       if (e.isDirectory()) {
-        if (path === 'lint' || path === '.github') await walk(path);
+        if (rel !== '' || path === 'lint' || path === '.github') await walk(path);
       } else out.push(path);
     }
   };
@@ -68,6 +68,27 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
       return !APP_OWN_FILES.includes(f);
     });
     expect(unregistered).toEqual([]);
+  });
+
+  it('the drift guard sees a new file nested under .github/workflows/', async () => {
+    const planted = resolve(TEMPLATE, '.github/workflows/new-gate.yml');
+    await fs.writeFile(planted, 'name: planted\n');
+    try {
+      expect(await gateSurface()).toContain('.github/workflows/new-gate.yml');
+    } finally {
+      await fs.rm(planted);
+    }
+  });
+
+  it('every command in a create-if-absent onWrite row is a script the template has', async () => {
+    const { scripts } = await templatePackage();
+    const rows = CREATE_IF_ABSENT.flatMap((c) => (c.onWrite === undefined ? [] : [c.onWrite]));
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      const names = [...row.matchAll(/npm run ([\w:-]+)/g)].map((m) => m[1] as string);
+      expect(names.length).toBeGreaterThan(0);
+      for (const n of names) expect(scripts[n], n).toBeDefined();
+    }
   });
 
   it('every template script is the app\'s own or in the gate list', async () => {

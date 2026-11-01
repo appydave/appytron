@@ -123,7 +123,7 @@ async function createIfAbsent(
 ): Promise<{ written: string[]; rows: string[] }> {
   const written: string[] = [];
   const rows: string[] = [];
-  for (const { from, to, hint } of CREATE_IF_ABSENT) {
+  for (const { from, to, hint, onWrite } of CREATE_IF_ABSENT) {
     const body = await read(join(templateDir, from));
     if (body === null) continue;
     const current = await read(join(targetDir, to));
@@ -131,6 +131,7 @@ async function createIfAbsent(
       await fs.mkdir(dirname(join(targetDir, to)), { recursive: true });
       await fs.writeFile(join(targetDir, to), body);
       written.push(to);
+      if (onWrite !== undefined) rows.push(`- ${to}: written by this upgrade; ${onWrite}`);
     } else if (hint !== undefined && current !== body) {
       rows.push(`- ${to}: yours differs from the framework's, so it was left as it is. The framework's version adds ${hint}; compare it with \`appytron-upgrade\`'s template copy and merge what you want.`);
     }
