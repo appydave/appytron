@@ -131,7 +131,7 @@ describe('G11 the deadcode script fails on an import cycle, naming the rule', ()
     SLOW
   );
 
-  // The aliases of tests (@main, @lint...) are not in tsconfig.web.json, so a cycle through one is not seen.
+  // G12e: the scan reads tsconfig.boundaries.json, which lists the test aliases too, so a cycle through one is seen.
   it.each([
     [
       'two test helpers, relative',
@@ -254,18 +254,24 @@ describe('G11 the reviewed configuration', () => {
     });
   });
 
-  it('forbids a circular import and nothing else, following no node_modules', () => {
+  it('forbids a circular import, following no node_modules (the boundary rules beside it: test/boundaries-config.test.ts)', () => {
     const config = createRequire(import.meta.url)(join(root, '.dependency-cruiser.cjs'));
 
-    expect(config).toEqual({
-      forbidden: [{ name: 'no-circular', severity: 'error', from: {}, to: { circular: true } }],
-      options: { doNotFollow: { path: 'node_modules' }, tsPreCompilationDeps: true },
+    expect(config.forbidden[0]).toEqual({
+      name: 'no-circular',
+      severity: 'error',
+      from: {},
+      to: { circular: true },
+    });
+    expect(config.options).toEqual({
+      doNotFollow: { path: 'node_modules' },
+      tsPreCompilationDeps: true,
     });
   });
 
   it('runs the guard, Knip, Knip on production code, then depcruise over src and lint, and the remedy on failure', () => {
     expect(manifest().scripts.deadcode).toBe(
-      'node lint/no-disable-directives.js && knip && knip --production --exclude binaries && depcruise -c .dependency-cruiser.cjs --ts-config tsconfig.web.json src lint test vitest.config.ts eslint.config.js electron.vite.config.ts || node lint/deadcode-remedy.js'
+      'node lint/no-disable-directives.js && knip && knip --production --exclude binaries && depcruise -c .dependency-cruiser.cjs --ts-config tsconfig.boundaries.json -T err-long src lint test vitest.config.ts eslint.config.js electron.vite.config.ts || node lint/deadcode-remedy.js'
     );
   });
 

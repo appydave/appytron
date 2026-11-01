@@ -91,7 +91,7 @@ describe('G11 the production pass: code only a test uses is dead', () => {
 
 describe('G11 a failing run ends with one line saying what to do', () => {
   const REMEDY =
-    'Dead code or a cycle: delete the unused file, export or dependency, or use it from production code (a test does not count); break a cycle by moving the shared piece into a third file. Do not add suppression.';
+    'Dead code, a cycle or a process-boundary import: delete the unused file, export or dependency, or use it from production code (a test does not count); break a cycle by moving the shared piece into a third file; a boundary finding prints its own remedy above. Do not add suppression.';
   const count = (text: string) => text.split(REMEDY).length - 1;
 
   it.each([

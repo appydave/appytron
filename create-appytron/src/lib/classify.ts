@@ -24,8 +24,7 @@ const AUTO = new Set([
   'src/preload/index.ts',
   'src/preload/index.d.ts',
   // Gate-owned files (ladder). Each later gate adds its own here in the same PR (or to CREATE_IF_ABSENT when an app may already have one). test/gate-guard.test.ts fails when a file at the template root, under lint/ or under .github/ is none of: auto, create-if-absent, or named in its APP_OWN_FILES. Files elsewhere (src/, test/) are not checked.
-  // Not yet shipped by the template, so not listed: .dependency-cruiser.cjs.
-  'eslint.config.js',
+    'eslint.config.js',
   // eslint.config.js reads it to switch off the rules Oxlint owns, so the two travel together.
   '.oxlintrc.json',
   // G08 duplicate gate: one config per scope (source, tests), both read by `npm run dup`.
@@ -34,6 +33,8 @@ const AUTO = new Set([
   // G11 dead-code and cycle gate: Knip's config (the one ruled exemption lives here) and the dependency-cruiser rules.
   'knip.json',
   '.dependency-cruiser.cjs',
+  // G12e: the alias list the dependency-cruiser scan reads, so an import through any alias is followed to its file.
+  'tsconfig.boundaries.json',
 ]);
 
 /**
