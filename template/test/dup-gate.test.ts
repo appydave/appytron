@@ -1,22 +1,12 @@
-import { spawnSync } from 'node:child_process';
-import {
-  copyFileSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { installedVersion, manifest } from './helpers/manifest';
+import { root, runInScratch, writeFiles } from './helpers/scratch';
 
 // G08: the duplicate gate as `npm run dup` runs it. Every probe runs the real script in a scratch copy of
 // the gate files (configs, guard, package.json) with the real node_modules linked in, so the wiring is
 // what fails, not the tool. Nothing is planted in the real template: other tests read it in parallel.
-const root = resolve(import.meta.dirname, '..');
 const GATE_FILES = [
   'package.json',
   '.jscpd.json',
@@ -47,28 +37,18 @@ function dup(
   files: Record<string, string>,
   command = ['npm', 'run', 'dup']
 ): { failed: boolean; output: string } {
-  const dir = mkdtempSync(join(tmpdir(), 'g08-'));
+  return runInScratch(
+    'g08-',
+    (dir) => {
+      for (const file of GATE_FILES) {
+        mkdirSync(dirname(join(dir, file)), { recursive: true });
+        copyFileSync(join(root, file), join(dir, file));
+      }
 
-  try {
-    for (const file of GATE_FILES) {
-      mkdirSync(dirname(join(dir, file)), { recursive: true });
-      copyFileSync(join(root, file), join(dir, file));
-    }
-
-    symlinkSync(join(root, 'node_modules'), join(dir, 'node_modules'));
-
-    for (const [file, text] of Object.entries(files)) {
-      mkdirSync(dirname(join(dir, file)), { recursive: true });
-      writeFileSync(join(dir, file), text);
-    }
-
-    const [program = 'npm', ...args] = command;
-    const run = spawnSync(program, args, { cwd: dir, encoding: 'utf8' });
-
-    return { failed: run.status !== 0, output: run.stdout + run.stderr };
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
+      writeFiles(dir, files);
+    },
+    command
+  );
 }
 
 const pair = (a: string, b: string, text = CLONE) => ({ [a]: text, [b]: text });

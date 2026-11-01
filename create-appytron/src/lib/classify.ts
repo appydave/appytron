@@ -29,6 +29,9 @@ const AUTO = new Set([
   // G08 duplicate gate: one config per scope (source, tests), both read by `npm run dup`.
   '.jscpd.json',
   '.jscpd.tests.json',
+  // G11 dead-code and cycle gate: Knip's config (the one ruled exemption lives here) and the dependency-cruiser rules.
+  'knip.json',
+  '.dependency-cruiser.cjs',
 ]);
 
 /**

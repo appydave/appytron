@@ -22,6 +22,7 @@ describe('mergeGatePackage', () => {
     expect(todo).toEqual([
       expect.stringContaining('scripts.postinstall: added by this upgrade'),
       expect.stringContaining('scripts.dup: added by this upgrade'),
+      expect.stringContaining('scripts.deadcode: added by this upgrade'),
     ]); // the only added entries with a note
     expect(Object.keys(pkg.scripts ?? {})).toEqual(['zeta', 'alpha', ...GATE_SCRIPTS]);
     expect(Object.keys(pkg.devDependencies ?? {})).toEqual(['vite', ...GATE_DEV_DEPS].sort((a, b) => a.localeCompare(b)));
@@ -37,6 +38,7 @@ describe('mergeGatePackage', () => {
       expect.stringContaining('scripts.lint: yours "my lint", framework "run lint"'),
       expect.stringContaining('scripts.postinstall: added by this upgrade'),
       expect.stringContaining('scripts.dup: added by this upgrade'),
+      expect.stringContaining('scripts.deadcode: added by this upgrade'),
       expect.stringContaining('devDependencies.eslint: yours "^8.0.0", framework "^2.0.0"'),
     ]);
   });
@@ -88,7 +90,7 @@ describe('runUpgrade: package.json merge, UPGRADE_TODO.md, .gitignore create-if-
     expect(pkg.scripts['format:check']).toBe('prettier --check .');
     expect(pkg.devDependencies.eslint).toBe('^8.0.0');
     expect(pkg.devDependencies.prettier).toBeDefined();
-    expect(first.todo).toHaveLength(5); // two customised entries + the postinstall and dup notes + the ci.yml written row
+    expect(first.todo).toHaveLength(6); // two customised entries + the postinstall, dup and deadcode notes + the ci.yml written row
     expect(first.todo.filter((r) => r.includes('scripts.postinstall'))).toEqual([
       expect.stringContaining('Set ELECTRON_SKIP_BINARY_DOWNLOAD=1 in your CI install'),
     ]);
@@ -101,8 +103,8 @@ describe('runUpgrade: package.json merge, UPGRADE_TODO.md, .gitignore create-if-
   });
 
   it('writes no UPGRADE_TODO.md when nothing was customised', async () => {
-    const { postinstall, dup } = JSON.parse(await fs.readFile(join(TEMPLATE, 'package.json'), 'utf8')).scripts;
-    await fs.writeFile(join(app, 'package.json'), JSON.stringify({ name: 'old', scripts: { postinstall, dup } }));
+    const { postinstall, dup, deadcode } = JSON.parse(await fs.readFile(join(TEMPLATE, 'package.json'), 'utf8')).scripts;
+    await fs.writeFile(join(app, 'package.json'), JSON.stringify({ name: 'old', scripts: { postinstall, dup, deadcode } }));
     await fs.mkdir(join(app, '.github/workflows'), { recursive: true });
     await fs.copyFile(join(TEMPLATE, '.github/workflows/ci.yml'), join(app, '.github/workflows/ci.yml'));
     await runUpgrade(TEMPLATE, app);

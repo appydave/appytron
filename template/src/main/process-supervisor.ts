@@ -8,8 +8,8 @@ export interface SpawnOptions {
   env?: NodeJS.ProcessEnv;
 }
 
-export type ProcessStatus = 'running' | 'exited' | 'error';
-export interface LogChunk {
+type ProcessStatus = 'running' | 'exited' | 'error';
+interface LogChunk {
   stream: 'stdout' | 'stderr';
   data: string;
 }

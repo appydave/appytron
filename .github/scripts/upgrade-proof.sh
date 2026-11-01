@@ -35,6 +35,7 @@ node "${ROOT}/create-appytron/dist/upgrade-cli.js"
 test -f lint/spacing.js || { echo "upgrade did not bring lint/spacing.js"; exit 1; }
 test -f .gitignore || { echo "upgrade did not create .gitignore"; exit 1; }
 test -f .jscpd.json && test -f .jscpd.tests.json || { echo "upgrade did not bring the .jscpd configs"; exit 1; }
+test -f knip.json && test -f .dependency-cruiser.cjs || { echo "upgrade did not bring the knip and dependency-cruiser configs"; exit 1; }
 grep -q 'npm run lint -- --fix' UPGRADE_TODO.md || { echo "upgrade wrote ci.yml but left no fix row in UPGRADE_TODO.md"; exit 1; }
 
 echo "== install, then lint / typecheck / build"
@@ -60,6 +61,8 @@ check_loads lint npm run lint
 check_loads eslint npx eslint . --max-warnings 0
 # G08: the dup script and jscpd reached the upgraded app and run (clones in the old code are reported, not failed on).
 check_loads dup npm run dup
+# G11: the deadcode script, Knip and dependency-cruiser reached the upgraded app and run (findings in the old code are reported, not failed on).
+check_loads deadcode npm run deadcode
 # Oxlint ends with `Found N warnings and M errors.`; ESLint prints `  line:col  error  ...` per finding.
 echo "findings: oxlint $(grep -Eo 'Found [0-9]+ warnings? and [0-9]+ errors?' "${WORK}/lint.out" | tail -n 1 || true), eslint $(grep -Ec '^\s+[0-9]+:[0-9]+\s+(error|warning)' "${WORK}/eslint.out" || true)"
 npm run typecheck

@@ -6,7 +6,7 @@ import { IpcRouter } from './ipc-router.js';
 import { WindowManager } from './window-manager.js';
 import { ProcessSupervisor } from './process-supervisor.js';
 
-export interface ConsoleContext {
+interface ConsoleContext {
   logger: Logger;
   windows: WindowManager;
   ipc: IpcRouter;
