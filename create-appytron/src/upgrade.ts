@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs';
 import { join, relative, dirname } from 'node:path';
 import { classify, type Tier } from './lib/classify.js';
+import { mergeGatePackage, type Pkg } from './lib/merge-package.js';
 
 const SKIP_DIRS = new Set([
   'node_modules', 'out', 'dist', '.git', '.turbo',
@@ -104,6 +105,38 @@ export async function applyUpgrade(
 
 export interface RunUpgradeResult extends ApplyResult {
   targetDir: string;
+  /** Rows written to UPGRADE_TODO.md this run (entries the app customised, left unchanged). */
+  todo: string[];
+}
+
+const TODO_FILE = 'UPGRADE_TODO.md';
+const TODO_HEADER = '# Upgrade to-do\n\nThe last `appytron-upgrade` left these package.json entries as you have them:\n\n';
+
+/** Create-if-absent: the template's `gitignore` becomes `.gitignore` only when the app has none. */
+async function ensureGitignore(templateDir: string, targetDir: string): Promise<boolean> {
+  const to = join(targetDir, '.gitignore');
+  if ((await read(to)) !== null) return false;
+  const body = await read(join(templateDir, 'gitignore'));
+  if (body === null) return false;
+  await fs.writeFile(to, body);
+  return true;
+}
+
+/** Add the gate scripts/devDependencies the app lacks (never replacing a value), and log customised ones. */
+async function mergeGateEntries(templateDir: string, targetDir: string): Promise<string[]> {
+  const pkgPath = join(targetDir, 'package.json');
+  const appRaw = await read(pkgPath);
+  if (appRaw === null) return [];
+  const template = JSON.parse((await read(join(templateDir, 'package.json'))) ?? '{}') as Pkg;
+  const { pkg, added, todo } = mergeGatePackage(template, JSON.parse(appRaw) as Pkg);
+  if (added.length > 0) await fs.writeFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+  const todoPath = join(targetDir, TODO_FILE);
+  const existing = await read(todoPath);
+  const fresh = todo.filter((row) => !(existing ?? '').includes(row));
+  if (fresh.length > 0) {
+    await fs.writeFile(todoPath, `${existing ?? TODO_HEADER}${fresh.join('\n')}\n`);
+  }
+  return fresh;
 }
 
 /**
@@ -123,10 +156,12 @@ export async function runUpgrade(
 
   const plan = await planUpgrade(templateDir, targetDir);
   const result = await applyUpgrade(plan, templateDir, targetDir, options);
+  if (await ensureGitignore(templateDir, targetDir)) result.applied.push('.gitignore');
+  const todo = await mergeGateEntries(templateDir, targetDir);
 
   const baseline = JSON.parse(baselineRaw) as Record<string, unknown>;
   baseline['lastUpgrade'] = options.now ?? new Date().toISOString();
   await fs.writeFile(baselinePath, `${JSON.stringify(baseline, null, 2)}\n`);
 
-  return { ...result, targetDir };
+  return { ...result, targetDir, todo };
 }

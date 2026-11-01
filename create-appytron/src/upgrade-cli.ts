@@ -21,11 +21,13 @@ async function main(): Promise<void> {
   const targetDir = process.cwd();
   const templateDir = resolveTemplateDir();
 
-  const { applied, needsReview } = await runUpgrade(templateDir, targetDir, { yes });
+  const { applied, needsReview, todo } = await runUpgrade(templateDir, targetDir, { yes });
 
   console.log(`\nAppyTron upgrade — ${applied.length} applied, ${needsReview.length} to review\n`);
   for (const p of applied) console.log(`  ✓ ${p}`);
   for (const p of needsReview) console.log(`  ~ ${p}  (recipe — re-run with --yes to apply)`);
+  for (const row of todo) console.log(`  ! ${row.slice(2)}`);
+  if (todo.length > 0) console.log('  (also written to UPGRADE_TODO.md)');
   console.log('');
 }
 

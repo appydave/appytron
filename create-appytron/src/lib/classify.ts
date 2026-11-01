@@ -21,7 +21,19 @@ const AUTO = new Set([
   'src/main/updater.ts',
   'src/preload/index.ts',
   'src/preload/index.d.ts',
+  // Gate files (ladder). Each later gate adds its own file here in the same PR; test/gate-guard.test.ts enforces it.
+  // Not yet shipped by the template, so not listed: .oxlintrc.json, .jscpd.json, .dependency-cruiser.cjs.
+  'eslint.config.js',
+  '.prettierrc',
+  '.prettierignore',
+  '.github/workflows/ci.yml',
 ]);
+
+/**
+ * Directories whose .js files are all framework-owned (the lint rules eslint.config.js imports).
+ * A file of the app's own dropped in one of these is overwritten if the template ships the same name.
+ */
+const AUTO_DIR_PREFIXES = ['lint/'];
 
 /** Project identity — never overwritten by an upgrade. */
 const OWNED = new Set([
@@ -45,6 +57,6 @@ export function classify(relPath: string): Tier {
   const p = relPath.split('\\').join('/');
   if (p.startsWith('.claude/')) return 'recipe';
   if (OWNED.has(p)) return 'owned';
-  if (AUTO.has(p)) return 'auto';
+  if (AUTO.has(p) || AUTO_DIR_PREFIXES.some((d) => p.startsWith(d) && p.endsWith('.js'))) return 'auto';
   return 'never';
 }
