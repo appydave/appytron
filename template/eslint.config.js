@@ -6,6 +6,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import oxlint from 'eslint-plugin-oxlint';
 import tseslint from 'typescript-eslint';
 import { fileURLToPath } from 'node:url';
+import { sizePlugin, sizeRules } from './lint/size.js';
 import { spacingRules } from './lint/spacing.js';
 
 const NODE = [
@@ -20,7 +21,7 @@ const RENDERER = ['src/renderer/src/**/*.{ts,tsx}', ...PRELOAD_TYPES];
 const SOURCE = ['**/*.{ts,tsx,js,mjs,cjs}'];
 
 // Type-aware rules need a tsconfig that includes the file, so each environment names its own.
-const typed = (name, files, project, extra = [], ignores = []) => [
+const typed = ({ name, files, project, extra = [], ignores = [] }) => [
   ...tseslint.configs.recommendedTypeChecked.map((c) => ({ ...c, files, ignores })),
   {
     name,
@@ -44,12 +45,20 @@ export default tseslint.config(
     rules: spacingRules,
   },
 
+  // G04 size limits: function 60 lines, 4 params, file 300 lines, 30 members. Not autofixable.
+  {
+    name: 'quality/size',
+    files: SOURCE,
+    plugins: { size: sizePlugin },
+    rules: sizeRules,
+  },
+
   // Main process, preload and shared: Node, tsconfig.node.json.
-  ...typed(
-    'env/node',
-    NODE,
-    './tsconfig.node.json',
-    [
+  ...typed({
+    name: 'env/node',
+    files: NODE,
+    project: './tsconfig.node.json',
+    extra: [
       {
         name: 'env/node-globals',
         files: NODE,
@@ -57,24 +66,29 @@ export default tseslint.config(
         languageOptions: { globals: globals.node },
       },
     ],
-    PRELOAD_TYPES
-  ),
+    ignores: PRELOAD_TYPES,
+  }),
 
   // Renderer: browser + React, tsconfig.web.json.
-  ...typed('env/renderer', RENDERER, './tsconfig.web.json', [
-    {
-      name: 'env/renderer-react',
-      files: RENDERER,
-      languageOptions: { globals: globals.browser },
-      plugins: { react, 'react-hooks': reactHooks },
-      settings: { react: { version: 'detect' } },
-      rules: {
-        ...react.configs.recommended.rules,
-        ...react.configs['jsx-runtime'].rules,
-        ...reactHooks.configs.recommended.rules,
+  ...typed({
+    name: 'env/renderer',
+    files: RENDERER,
+    project: './tsconfig.web.json',
+    extra: [
+      {
+        name: 'env/renderer-react',
+        files: RENDERER,
+        languageOptions: { globals: globals.browser },
+        plugins: { react, 'react-hooks': reactHooks },
+        settings: { react: { version: 'detect' } },
+        rules: {
+          ...react.configs.recommended.rules,
+          ...react.configs['jsx-runtime'].rules,
+          ...reactHooks.configs.recommended.rules,
+        },
       },
-    },
-  ]),
+    ],
+  }),
 
   // Tests and root configs are in no tsconfig: syntax-level rules only, Node globals.
   ...tseslint.configs.recommended.map((c) => ({
