@@ -1,55 +1,14 @@
-import { appendFileSync, cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { installedVersion, manifest } from './helpers/manifest';
-import { root, runInScratch, writeFiles } from './helpers/scratch';
+import { type Change, deadcode, SLOW } from './helpers/deadcode';
+import { root } from './helpers/scratch';
 
 // G11: the dead-code and cycle gate as `npm run deadcode` runs it. Every probe runs the real script in a scratch
 // copy of the whole template (node_modules linked in), so the wiring is what fails, not the tool. Nothing is
 // planted in the real template: other tests read it in parallel.
-const SKIP = new Set(['node_modules', 'out', 'dist', 'coverage', '.git', '.claude']);
-const SLOW = 60_000;
-
-interface Change {
-  write?: Record<string, string>;
-  append?: Record<string, string>;
-  remove?: string[];
-  dependencies?: Record<string, string>;
-}
-
-function deadcode(change: Change = {}): { failed: boolean; output: string } {
-  return runInScratch(
-    'g11-',
-    (dir) => {
-      cpSync(root, dir, {
-        recursive: true,
-        filter: (from) => !SKIP.has(from.split('/').pop() ?? ''),
-      });
-      writeFiles(dir, change.write ?? {});
-
-      for (const [file, text] of Object.entries(change.append ?? {})) {
-        appendFileSync(join(dir, file), text);
-      }
-
-      for (const file of change.remove ?? []) {
-        rmSync(join(dir, file));
-      }
-
-      if (change.dependencies) {
-        const path = join(dir, 'package.json');
-        const pkg = JSON.parse(readFileSync(path, 'utf8'));
-
-        writeFileSync(
-          path,
-          JSON.stringify({ ...pkg, dependencies: { ...pkg.dependencies, ...change.dependencies } })
-        );
-      }
-    },
-    ['npm', 'run', 'deadcode']
-  );
-}
-
 describe('G11 the deadcode script fails on dead code, naming it', () => {
   it(
     'passes the untouched template, so the failures below are the planted code',
@@ -80,7 +39,7 @@ describe('G11 the deadcode script fails on dead code, naming it', () => {
   );
 
   it.each([
-    ['main', 'src/main/file-author.ts'],
+    ['main', 'src/main/ipc-router.ts'],
     ['shared', 'src/shared/ipc.ts'],
     ['lint', 'lint/spacing.js'],
   ])(
@@ -172,6 +131,44 @@ describe('G11 the deadcode script fails on an import cycle, naming the rule', ()
     SLOW
   );
 
+  // The aliases of tests (@main, @lint...) are not in tsconfig.web.json, so a cycle through one is not seen.
+  it.each([
+    [
+      'two test helpers, relative',
+      'test/helpers/ca.ts',
+      {
+        write: {
+          'test/helpers/ca.ts': "import { b } from './cb';\nexport const a = () => b;\n",
+          'test/helpers/cb.ts': "import { a } from './ca';\nexport const b = () => a;\n",
+        },
+        append: { 'test/ipc-router.test.ts': "\nimport { a } from './helpers/ca';\n\nvoid a;\n" },
+      },
+    ],
+    [
+      'a root config and the helper it imports',
+      'vitest.helper.ts',
+      {
+        write: {
+          'vitest.helper.ts':
+            "import config from './vitest.config';\n\nexport const helper = () => config;\n",
+        },
+        append: {
+          'vitest.config.ts': "\nimport { helper } from './vitest.helper';\n\nvoid helper;\n",
+        },
+      },
+    ],
+  ])(
+    'a cycle in %s',
+    (_name, entry, change: Change) => {
+      const { failed, output } = deadcode(change);
+
+      expect(failed).toBe(true);
+      expect(output).toContain('no-circular');
+      expect(output).toContain(entry);
+    },
+    SLOW
+  );
+
   it(
     'the same files without the back edge pass, so the failure is the cycle',
     () => {
@@ -247,9 +244,12 @@ describe('G11 the deadcode script refuses a Knip tag, which would hide an export
 describe('G11 the reviewed configuration', () => {
   const read = (file: string): unknown => JSON.parse(readFileSync(join(root, file), 'utf8'));
 
-  it('exempts exactly src/main/updater.ts and electron-updater, by name', () => {
+  // Entry-file exports are not reported (Knip's default), so file-author.ts's exports are exempt with it.
+  it('exempts exactly src/main/updater.ts, electron-updater and src/main/file-author.ts, by name', () => {
     expect(read('knip.json')).toEqual({
       $schema: 'https://unpkg.com/knip@6/schema.json',
+      entry: ['src/main/file-author.ts!'],
+      project: ['src/**!', 'src/**/*.css!', 'test/**', 'lint/**', '*.{js,ts,cjs}'],
       ignore: ['src/main/updater.ts'],
       ignoreDependencies: ['electron-updater'],
     });
@@ -264,9 +264,9 @@ describe('G11 the reviewed configuration', () => {
     });
   });
 
-  it('runs the guard, Knip, then depcruise over src and lint with the web aliases', () => {
+  it('runs the guard, Knip, Knip on production code, then depcruise over src and lint, and the remedy on failure', () => {
     expect(manifest().scripts.deadcode).toBe(
-      'node lint/no-disable-directives.js && knip && depcruise -c .dependency-cruiser.cjs --ts-config tsconfig.web.json src lint'
+      'node lint/no-disable-directives.js && knip && knip --production --exclude binaries && depcruise -c .dependency-cruiser.cjs --ts-config tsconfig.web.json src lint test vitest.config.ts eslint.config.js electron.vite.config.ts || node lint/deadcode-remedy.js'
     );
   });
 

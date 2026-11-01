@@ -257,7 +257,8 @@ describe('G02 one owner per rule', () => {
     const config: { rules: Record<string, unknown> } = await new ESLint({
       cwd: root,
     }).calculateConfigForFile(resolve(root, 'src/main/index.ts'));
-    const off = (rule: string) => [0, 'off'].includes([config.rules[rule]].flat()[0]);
+    const off = (rule: string) =>
+      [0, 'off'].some((value) => value === [config.rules[rule]].flat()[0]);
 
     expect(off('@typescript-eslint/no-explicit-any')).toBe(true);
     expect(off('@typescript-eslint/no-non-null-assertion')).toBe(true);

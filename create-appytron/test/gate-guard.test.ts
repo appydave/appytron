@@ -141,14 +141,30 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
 
   // An upgraded app keeps its own ci.yml (never overwritten), so this sentence is the only thing that makes it run the gate.
   it('the scripts.dup note tells an upgraded app to put `npm run dup` in its CI', () => {
-    expect(ADDED_ENTRY_NOTES['scripts.dup']).toContain('Add `npm run dup` to your CI after `npm run lint`');
+    expect(ADDED_ENTRY_NOTES['scripts.dup']).toContain(
+      'If you use the ci.yml this upgrade wrote, it already runs `npm run dup` after `npm run lint`; if your CI is a file of your own, add `npm run dup` after `npm run lint`.'
+    );
   });
 
   it('the scripts.deadcode note tells an upgraded app to put `npm run deadcode` in its CI and names the exemption', () => {
     const note = ADDED_ENTRY_NOTES['scripts.deadcode'];
 
-    expect(note).toContain('Add `npm run deadcode` to your CI after `npm run dup`');
-    expect(note).toContain('src/main/updater.ts with electron-updater');
+    expect(note).toContain(
+      'If you use the ci.yml this upgrade wrote, it already runs `npm run deadcode` after `npm run dup`; if your CI is a file of your own, add `npm run deadcode` after `npm run dup`.'
+    );
+    expect(note).toContain('src/main/updater.ts with electron-updater, and src/main/file-author.ts');
+  });
+
+  it('the test type-check is registered: its script and tsconfig travel with an upgrade, and the note says how to wire it', async () => {
+    expect(GATE_SCRIPTS).toContain('typecheck:tests');
+    await fs.access(resolve(TEMPLATE, 'tsconfig.tests.json'));
+    expect(classify('tsconfig.tests.json')).toBe('auto');
+    expect(ADDED_ENTRY_NOTES['scripts.typecheck:tests']).toContain('add `npm run typecheck:tests` to it');
+  });
+
+  it('every file under template/lint/ is gate-owned, the deadcode remedy script included', async () => {
+    await fs.access(resolve(TEMPLATE, 'lint/deadcode-remedy.js'));
+    expect(classify('lint/deadcode-remedy.js')).toBe('auto');
   });
 
   it('the deadcode script, Knip, dependency-cruiser and both configs are registered, so an upgrade carries them', async () => {

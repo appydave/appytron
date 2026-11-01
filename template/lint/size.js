@@ -3,13 +3,11 @@
  * most 300 lines (blank lines and comments are not counted), and a class, interface or object
  * type declares at most 30 members. `describe` callbacks are exempt from the function limit:
  * they hold a whole suite, and each `it` inside is still checked. The exemption applies to
- * test files only (`*.test.*` or under a `test/` folder).
+ * test files only (TEST_FILES in test-scope.js).
  */
-import { relative, sep } from 'node:path';
 import { builtinRules } from 'eslint/use-at-your-own-risk';
 
 const MAX_MEMBERS = 30;
-const TEST_NAME = /\.test\.[cm]?[jt]sx?$/;
 const coreMaxLinesPerFunction = builtinRules.get('max-lines-per-function');
 
 // describe(...), describe.skip/only(...), describe.each([...])(...) and describe.each`...`(...)
@@ -30,11 +28,10 @@ function startsFromDescribe(callee) {
   return callee.type === 'Identifier' && callee.name === 'describe';
 }
 
-// A test file is `*.test.*`, or anything under a `test/` folder (path taken from the lint root).
+// A test file is one eslint.config.js matched with TEST_FILES (lint/test-scope.js), which sets
+// settings.size.testFile for it. The list lives once; ESLint, not this file, does the matching.
 function isTestFile(context) {
-  const path = relative(context.cwd, context.filename);
-
-  return TEST_NAME.test(path) || path.split(sep).includes('test');
+  return context.settings.size?.testFile === true;
 }
 
 function isDescribeCallback(node) {
