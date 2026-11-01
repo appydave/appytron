@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ESLint } from 'eslint';
-import { TEST_FILES } from '../lint/test-scope.js';
-import { findDisableDirectives } from '../lint/no-disable-directives.js';
+import { TEST_FILES } from '@lint/test-scope.js';
+import { findDisableDirectives } from '@lint/no-disable-directives.js';
 import { oxlintAt } from './helpers/oxlint-probe';
 
 const root = resolve(import.meta.dirname, '..');

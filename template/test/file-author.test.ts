@@ -4,7 +4,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { FileAuthor } from '../src/main/file-author';
+import { FileAuthor } from '@main/file-author';
 
 const exec = promisify(execFile);
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ProcessSupervisor } from '../src/main/process-supervisor';
+import { ProcessSupervisor } from '@main/process-supervisor';
 
 describe('ProcessSupervisor', () => {
   it('spawns a process, captures stdout, and reports a clean exit', async () => {

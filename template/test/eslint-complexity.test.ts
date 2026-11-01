@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { TEST_FILES } from '../lint/test-scope.js';
+import { TEST_FILES } from '@lint/test-scope.js';
 import { ERROR, errorMessages, eslint, root } from './helpers/eslint-probe';
 import { installedVersion, manifest } from './helpers/manifest';
 

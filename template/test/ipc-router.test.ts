@@ -12,7 +12,7 @@ vi.mock('electron', () => ({
   },
 }));
 
-const { IpcRouter } = await import('../src/main/ipc-router');
+const { IpcRouter } = await import('@main/ipc-router');
 
 function invoke(channel: string, raw: unknown): Promise<unknown> | undefined {
   return handlers.get(channel)?.({}, raw);
