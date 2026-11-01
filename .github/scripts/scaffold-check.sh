@@ -19,6 +19,12 @@ npm run build
 echo "== scaffold into ${APP}"
 node "${ROOT}/create-appytron/dist/index.js" scaffolded-app --into "${APP}"
 test -f "${APP}/.github/workflows/ci.yml" || { echo "scaffold dropped .github/workflows/ci.yml"; exit 1; }
+test -f "${APP}/.gitignore" || { echo "scaffold dropped .gitignore (template/gitignore not renamed?)"; exit 1; }
+test ! -e "${APP}/gitignore" || { echo "scaffold left gitignore un-renamed"; exit 1; }
+git -C "${APP}" init --quiet
+for ignored in out/ node_modules/; do
+  git -C "${APP}" check-ignore --quiet "${ignored}" || { echo ".gitignore does not ignore ${ignored}"; exit 1; }
+done
 
 echo "== the scaffolded app's own checks"
 cd "${APP}"

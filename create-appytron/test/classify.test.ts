@@ -18,7 +18,7 @@ describe('classify', () => {
   });
 
   it('owned — project identity', () => {
-    for (const p of ['package.json', 'electron-builder.yml', 'appytron.json']) {
+    for (const p of ['package.json', 'electron-builder.yml', 'appytron.json', 'gitignore', '.gitignore']) {
       expect(classify(p)).toBe('owned');
     }
   });
