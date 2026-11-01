@@ -7,7 +7,7 @@ export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
     resolve: {
-      alias: { '@shared': resolve('src/shared') },
+      alias: { '@shared': resolve('src/shared'), '@main': resolve('src/main') },
     },
     build: {
       rollupOptions: { input: { index: resolve('src/main/index.ts') } },
@@ -16,7 +16,7 @@ export default defineConfig({
   preload: {
     plugins: [externalizeDepsPlugin()],
     resolve: {
-      alias: { '@shared': resolve('src/shared') },
+      alias: { '@shared': resolve('src/shared'), '@preload': resolve('src/preload') },
     },
     build: {
       rollupOptions: { input: { index: resolve('src/preload/index.ts') } },
