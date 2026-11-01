@@ -59,16 +59,22 @@ describe('G11 the deadcode script fails on dead code, naming it', () => {
     SLOW
   );
 
-  it(
-    'an unused file',
-    () => {
-      const { failed, output } = deadcode({
-        write: { 'src/main/orphan.ts': 'export const orphan = 1;\n' },
-      });
+  it.each([
+    ['main', 'src/main/orphan.ts'],
+    ['preload', 'src/preload/orphan.ts'],
+    ['shared', 'src/shared/orphan.ts'],
+    ['renderer', 'src/renderer/src/orphan.ts'],
+    ['lint', 'lint/orphan.js'],
+    ['a test helper', 'test/helpers/orphan.ts'],
+    ['the project root', 'orphan.config.js'],
+  ])(
+    'an unused file in %s',
+    (_where, file) => {
+      const { failed, output } = deadcode({ write: { [file]: 'export const orphan = 1;\n' } });
 
       expect(failed).toBe(true);
       expect(output).toContain('Unused files');
-      expect(output).toContain('src/main/orphan.ts');
+      expect(output).toContain(file);
     },
     SLOW
   );
