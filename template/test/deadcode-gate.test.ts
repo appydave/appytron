@@ -244,13 +244,12 @@ describe('G11 the deadcode script refuses a Knip tag, which would hide an export
 describe('G11 the reviewed configuration', () => {
   const read = (file: string): unknown => JSON.parse(readFileSync(join(root, file), 'utf8'));
 
-  // Entry-file exports are not reported (Knip's default), so file-author.ts's exports are exempt with it.
+  // `ignore` hides the findings of the named file (its own unused exports too) and of nothing it imports.
   it('exempts exactly src/main/updater.ts, electron-updater and src/main/file-author.ts, by name', () => {
     expect(read('knip.json')).toEqual({
       $schema: 'https://unpkg.com/knip@6/schema.json',
-      entry: ['src/main/file-author.ts!'],
       project: ['src/**!', 'src/**/*.css!', 'test/**', 'lint/**', '*.{js,ts,cjs}'],
-      ignore: ['src/main/updater.ts'],
+      ignore: ['src/main/updater.ts', 'src/main/file-author.ts'],
       ignoreDependencies: ['electron-updater'],
     });
   });

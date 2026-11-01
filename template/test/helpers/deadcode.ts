@@ -2,7 +2,7 @@ import { appendFileSync, cpSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { join } from 'node:path';
 import { root, runInScratch, writeFiles } from './scratch';
 
-// `npm run deadcode` in a scratch copy of the whole template: the shared setup of the G11 gate tests.
+// An npm script in a scratch copy of the whole template: the shared setup of the G11 and AF4 gate tests.
 const SKIP = new Set(['node_modules', 'out', 'dist', 'coverage', '.git', '.claude']);
 
 export const SLOW = 60_000;
@@ -14,7 +14,7 @@ export interface Change {
   dependencies?: Record<string, string>;
 }
 
-export function deadcode(change: Change = {}): { failed: boolean; output: string } {
+export function inCopy(change: Change, command: string[]): { failed: boolean; output: string } {
   return runInScratch(
     'g11-',
     (dir) => {
@@ -42,6 +42,8 @@ export function deadcode(change: Change = {}): { failed: boolean; output: string
         );
       }
     },
-    ['npm', 'run', 'deadcode']
+    command
   );
 }
+
+export const deadcode = (change: Change = {}) => inCopy(change, ['npm', 'run', 'deadcode']);

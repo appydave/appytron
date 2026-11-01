@@ -59,14 +59,31 @@ describe('G11 the production pass: code only a test uses is dead', () => {
   );
 
   it(
-    'the file-author primitive, which no production code calls yet, is the one named exception',
+    'the file-author primitive, which no production code calls yet, is exempt by name, and only itself',
     () => {
       const config = JSON.parse(readFileSync(join(root, 'knip.json'), 'utf8'));
-      const { entry: _entry, ...withoutIt } = config;
-      const { failed, output } = deadcode({ write: { 'knip.json': JSON.stringify(withoutIt) } });
+      const ignore = config.ignore.filter((file: string) => file !== 'src/main/file-author.ts');
+      const bare = deadcode({ write: { 'knip.json': JSON.stringify({ ...config, ignore }) } });
+
+      expect(bare.failed).toBe(true);
+      expect(bare.output).toContain('src/main/file-author.ts');
+    },
+    SLOW
+  );
+
+  it(
+    'a helper only file-author.ts imports is still dead, so the exemption hides nothing else',
+    () => {
+      const { failed, output } = deadcode({
+        write: { 'src/main/author-helper.ts': 'export const helper = 1;\n' },
+        append: {
+          'src/main/file-author.ts':
+            "\nimport { helper } from './author-helper';\n\nvoid helper;\n",
+        },
+      });
 
       expect(failed).toBe(true);
-      expect(output).toContain('src/main/file-author.ts');
+      expect(output).toContain('src/main/author-helper.ts');
     },
     SLOW
   );

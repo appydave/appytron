@@ -88,7 +88,7 @@ describe('no parent-relative imports', () => {
     ],
     [
       'tests',
-      ['test/eslint-size.test.ts'],
+      ['test/eslint-size.test.ts', 'test/helpers/scratch.ts'],
       `No '../' imports: use a root alias. @shared/* is src/shared, @main/* is src/main, @preload/* is src/preload, @lint/* is lint, @root/* is the project root. ${SAME}`,
     ],
     ['root configs and lint/', ['vitest.config.ts', 'eslint.config.js', 'lint/probe.js'], NONE],

@@ -1,7 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["src/main/file-author.ts!"],
   "project": ["src/**!", "src/**/*.css!", "test/**", "lint/**", "*.{js,ts,cjs}"],
-  "ignore": ["src/main/updater.ts"],
+  "ignore": ["src/main/updater.ts", "src/main/file-author.ts"],
   "ignoreDependencies": ["electron-updater"]
 }
