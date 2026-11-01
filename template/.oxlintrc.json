@@ -3,6 +3,7 @@
   "plugins": ["typescript", "react"],
   "ignorePatterns": ["**/out/**", "**/dist/**", "**/coverage/**", "**/node_modules/**"],
   "rules": {
+    "complexity": ["error", { "max": 6 }],
     "typescript/no-explicit-any": "error",
     "typescript/no-non-null-assertion": "error",
     "typescript/consistent-type-assertions": ["error", { "assertionStyle": "never" }],
@@ -18,9 +19,10 @@
   },
   "overrides": [
     {
-      // Tests out of scope (settings, G05): fixtures and expected values are literals by nature.
+      // Tests out of scope (settings, G05, G06): fixtures and expected values are literals by nature,
+      // and a probe is allowed to be as branchy as the code it plants.
       "files": ["test/**"],
-      "rules": { "no-magic-numbers": "off" }
+      "rules": { "no-magic-numbers": "off", "complexity": "off" }
     },
     {
       // The one assertion the template keeps: the IPC boundary hands the handler `raw` (unknown) and

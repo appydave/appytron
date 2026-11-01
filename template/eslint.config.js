@@ -4,10 +4,14 @@ import globals from 'globals';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import oxlint from 'eslint-plugin-oxlint';
+import sonarjs from 'eslint-plugin-sonarjs';
 import tseslint from 'typescript-eslint';
 import { fileURLToPath } from 'node:url';
 import { sizePlugin, sizeRules } from './lint/size.js';
 import { spacingRules } from './lint/spacing.js';
+
+const COGNITIVE_MAX = 8;
+const EXPRESSION_MAX = 3;
 
 const NODE = [
   'src/main/**/*.ts',
@@ -51,6 +55,21 @@ export default tseslint.config(
     files: SOURCE,
     plugins: { size: sizePlugin },
     rules: sizeRules,
+  },
+
+  // G06 complexity. Cyclomatic (max 6) is owned by Oxlint's `complexity` rule in .oxlintrc.json;
+  // eslint-plugin-oxlint switches ESLint's copy off. SonarJS owns the two metrics Oxlint lacks.
+  // Register the rules by name: never spread sonarjs.configs.recommended (hundreds of rules), and
+  // never enable sonarjs/cyclomatic-complexity (a second owner). Tests are out of scope.
+  {
+    name: 'quality/complexity',
+    files: SOURCE,
+    ignores: ['**/*.test.*', '**/test/**'],
+    plugins: { sonarjs },
+    rules: {
+      'sonarjs/cognitive-complexity': ['error', COGNITIVE_MAX],
+      'sonarjs/expression-complexity': ['error', { max: EXPRESSION_MAX }],
+    },
   },
 
   // Main process, preload and shared: Node, tsconfig.node.json.
