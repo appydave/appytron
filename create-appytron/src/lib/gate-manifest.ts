@@ -6,6 +6,12 @@
 // `postinstall` (E1) is not a gate: it is listed so an upgrade also gives existing apps the Electron binary download.
 export const GATE_SCRIPTS = ['lint', 'format:check', 'postinstall'] as const;
 
+/** A row for UPGRADE_TODO.md when the upgrade ADDS the entry (key `section.name`): what the app owner must do by hand. */
+export const ADDED_ENTRY_NOTES: Readonly<Record<string, string>> = {
+  'scripts.postinstall':
+    'added by this upgrade; it downloads the Electron binary on a plain `npm install`. Set ELECTRON_SKIP_BINARY_DOWNLOAD=1 in your CI install step so CI does not download ~100 MB per run.',
+};
+
 export const GATE_DEV_DEPS = [
   '@eslint/js',
   '@stylistic/eslint-plugin',

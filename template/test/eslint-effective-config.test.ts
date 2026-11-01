@@ -124,11 +124,16 @@ describe('A4 size rules are errors with the ruled limits, in every environment',
       const [level, ...restrictions] = await ruleEntry(file, 'no-restricted-syntax');
 
       expect(level).toBe(ERROR);
-      expect(restrictions).toEqual([
-        expect.objectContaining({ selector: 'ClassBody[body.length>30]' }),
-        expect.objectContaining({ selector: 'TSInterfaceBody[body.length>30]' }),
-        expect.objectContaining({ selector: 'TSTypeLiteral[members.length>30]' }),
-      ]);
+      // One entry per cap, so a later gate may add a selector of its own; replacing the block drops all three.
+      for (const selector of [
+        'ClassBody[body.length>30]',
+        'TSInterfaceBody[body.length>30]',
+        'TSTypeLiteral[members.length>30]',
+      ]) {
+        expect(restrictions, `no-restricted-syntax lost the ${selector} cap`).toContainEqual(
+          expect.objectContaining({ selector, message: expect.stringContaining('Split it') })
+        );
+      }
     }
   );
 });
