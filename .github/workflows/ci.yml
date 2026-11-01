@@ -46,3 +46,17 @@ jobs:
         with:
           node-version: '24'
       - run: .github/scripts/scaffold-check.sh
+
+  # An app scaffolded from the PUBLISHED create-appytron@0.2.0 must lint after the upgrade from this branch.
+  # Uses the npm registry; the planted-break run must fail.
+  upgrade-proof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: .github/scripts/upgrade-proof.sh
+      - name: planted break must fail
+        run: |
+          if .github/scripts/upgrade-proof.sh --break; then echo "planted break passed"; exit 1; fi
