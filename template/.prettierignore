@@ -5,4 +5,5 @@
 # Anywhere
 node_modules
 package-lock.json
-.claude
+# Template root only: a nested src/.claude/ is source and stays checked
+/.claude

@@ -83,7 +83,7 @@ describe('runUpgrade: package.json merge, UPGRADE_TODO.md, .gitignore create-if-
     expect(pkg.scripts['format:check']).toBe('prettier --check .');
     expect(pkg.devDependencies.eslint).toBe('^8.0.0');
     expect(pkg.devDependencies.prettier).toBeDefined();
-    expect(first.todo).toHaveLength(2);
+    expect(first.todo).toHaveLength(3); // two customised entries + the ci.yml written row
     const todoFile = await fs.readFile(join(app, 'UPGRADE_TODO.md'), 'utf8');
     for (const row of first.todo) expect(todoFile).toContain(row);
 
@@ -94,6 +94,8 @@ describe('runUpgrade: package.json merge, UPGRADE_TODO.md, .gitignore create-if-
 
   it('writes no UPGRADE_TODO.md when nothing was customised', async () => {
     await fs.writeFile(join(app, 'package.json'), JSON.stringify({ name: 'old' }));
+    await fs.mkdir(join(app, '.github/workflows'), { recursive: true });
+    await fs.copyFile(join(TEMPLATE, '.github/workflows/ci.yml'), join(app, '.github/workflows/ci.yml'));
     await runUpgrade(TEMPLATE, app);
     await expect(fs.access(join(app, 'UPGRADE_TODO.md'))).rejects.toThrow();
   });
@@ -102,6 +104,28 @@ describe('runUpgrade: package.json merge, UPGRADE_TODO.md, .gitignore create-if-
     const res = await runUpgrade(TEMPLATE, app);
     expect(res.applied).toContain(f);
     expect(await fs.readFile(join(app, f), 'utf8')).toBe(await fs.readFile(join(TEMPLATE, f), 'utf8'));
+  });
+
+  it('writing ci.yml adds one row naming the fix commands, only when written, never twice', async () => {
+    const ci = '.github/workflows/ci.yml';
+    const first = await runUpgrade(TEMPLATE, app);
+    const rows = first.todo.filter((r) => r.startsWith(`- ${ci}: written`));
+    expect(rows).toHaveLength(1);
+    const at = (cmd: string): number => (rows[0] as string).indexOf(`\`${cmd}\``);
+    const order = ['npm run lint -- --fix', 'npm run format', 'npm run lint', 'npm run format:check'].map(at);
+    expect(order.every((i) => i >= 0)).toBe(true); // all four present (closing backtick: `format` is a prefix of `format:check`)
+    expect(order).toEqual([...order].sort((a, b) => a - b)); // lint --fix, then format, then the two checks
+    expect(await fs.readFile(join(app, 'UPGRADE_TODO.md'), 'utf8')).toContain(rows[0]);
+    expect((await runUpgrade(TEMPLATE, app)).todo.filter((r) => r.startsWith(`- ${ci}:`))).toEqual([]);
+    const todo = await fs.readFile(join(app, 'UPGRADE_TODO.md'), 'utf8');
+    expect(todo.split(rows[0] as string)).toHaveLength(2);
+  });
+
+  it('an existing identical ci.yml gets no written row', async () => {
+    await fs.mkdir(join(app, '.github/workflows'), { recursive: true });
+    await fs.copyFile(join(TEMPLATE, '.github/workflows/ci.yml'), join(app, '.github/workflows/ci.yml'));
+    const res = await runUpgrade(TEMPLATE, app);
+    expect(res.todo.filter((r) => r.includes('ci.yml: written'))).toEqual([]);
   });
 
   it.each(['.prettierrc', '.prettierignore', '.github/workflows/ci.yml'])('%s: present and different -> left as is, one to-do row', async (f) => {
