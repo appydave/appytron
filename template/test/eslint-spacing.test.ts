@@ -62,6 +62,14 @@ describe('G03 readable spacing gate, run through the real eslint.config.js', () 
     ).toContain(PADDING);
   });
 
+  it('wants a blank line after a block before a non-return statement', async () => {
+    const head =
+      'declare const x: boolean;\ndeclare function a(): void;\ndeclare function go(): void;\n\n';
+
+    expect(await errors(`${head}if (x) {\n  a();\n}\ngo();\n`)).toContain(PADDING);
+    expect(await errors(`${head}if (x) {\n  a();\n}\n\ngo();\n`)).not.toContain(PADDING);
+  });
+
   it('wants a blank line between class members', async () => {
     const bad = 'export class A {\n  a() {\n    return 1;\n  }\n  b() {\n    return 2;\n  }\n}\n';
     const good = bad.replace('  }\n  b()', '  }\n\n  b()');

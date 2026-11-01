@@ -1,7 +1,7 @@
 /**
  * G03 readable spacing: one statement per line, braces always, and blank lines
  * around blocks, declarations, functions and returns. Every rule is autofixable:
- * run `npm run lint:fix`. Rules and values follow spaghetti-busters 6b8b7f3 + 3c484f4.
+ * run `npm run lint -- --fix`. Rules and values follow spaghetti-busters 6b8b7f3 + 3c484f4.
  */
 export const spacingRules = {
   curly: ['error', 'all'],
