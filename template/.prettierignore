@@ -1,0 +1,8 @@
+# Anchored to the template root, so a source folder named out/dist deeper down is still checked.
+/out
+/dist
+/coverage
+# Anywhere
+node_modules
+package-lock.json
+.claude
