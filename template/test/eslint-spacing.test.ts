@@ -5,7 +5,14 @@ import { describe, expect, it } from 'vitest';
 // Runs the real eslint.config.js over probe text, so the test proves the gate is wired, not the rules.
 const root = resolve(import.meta.dirname, '..');
 const ERROR = 2;
-const eslint = new ESLint({ cwd: root });
+// With CI set, typescript-eslint assumes a one-shot run and reads each file from disk, ignoring the
+// probe text lintText is given. Turning that inference off makes the probe text count everywhere.
+const eslint = new ESLint({
+  cwd: root,
+  overrideConfig: {
+    languageOptions: { parserOptions: { disallowAutomaticSingleRunInference: true } },
+  },
+});
 
 // Existing paths, because type-aware parsing needs a file a tsconfig includes; the text is the probe.
 const MAIN = 'src/main/index.ts';
