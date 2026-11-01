@@ -9,6 +9,7 @@ import tseslint from 'typescript-eslint';
 import { fileURLToPath } from 'node:url';
 import { sizePlugin, sizeRules } from './lint/size.js';
 import { spacingRules } from './lint/spacing.js';
+import { TEST_FILES } from './lint/test-scope.js';
 
 const COGNITIVE_MAX = 8;
 const EXPRESSION_MAX = 3;
@@ -64,7 +65,7 @@ export default tseslint.config(
   {
     name: 'quality/complexity',
     files: SOURCE,
-    ignores: ['**/*.test.*', '**/test/**'],
+    ignores: TEST_FILES,
     plugins: { sonarjs },
     rules: {
       'sonarjs/cognitive-complexity': ['error', COGNITIVE_MAX],
