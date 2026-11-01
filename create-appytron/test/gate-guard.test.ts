@@ -18,6 +18,24 @@ const APP_OWN_DEV_DEPS = [
   'typescript', 'vite', 'vitest',
 ];
 
+/** Template files that are the app's own or never upgraded (everything else at the root, in lint/ or in .github/ must be registered). */
+const APP_OWN_FILES = ['README.md', 'package-lock.json', '.github/pull_request_template.md'];
+
+/** Files at the template root, plus everything under lint/ and .github/ (any extension). */
+async function gateSurface(): Promise<string[]> {
+  const out: string[] = [];
+  const walk = async (rel: string): Promise<void> => {
+    for (const e of await fs.readdir(resolve(TEMPLATE, rel), { withFileTypes: true })) {
+      const path = rel === '' ? e.name : `${rel}/${e.name}`;
+      if (e.isDirectory()) {
+        if (path === 'lint' || path === '.github') await walk(path);
+      } else out.push(path);
+    }
+  };
+  await walk('');
+  return out;
+}
+
 async function templatePackage(): Promise<{ scripts: Record<string, string>; devDependencies: Record<string, string> }> {
   return JSON.parse(await fs.readFile(resolve(TEMPLATE, 'package.json'), 'utf8'));
 }
@@ -39,6 +57,17 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
       expect(classify(f), f).toBe('owned');
     }
     expect(classify('.github/pull_request_template.md')).toBe('never');
+  });
+
+  it('every root file, lint/ file and .github/ file in the template is registered: auto, create-if-absent, or named app-own', async () => {
+    const created = CREATE_IF_ABSENT.map((c) => c.from);
+    const unregistered = (await gateSurface()).filter((f) => {
+      const tier = classify(f);
+      if (tier === 'auto') return false;
+      if (tier === 'owned' && (created.includes(f) || f === 'package.json' || f === 'electron-builder.yml')) return false;
+      return !APP_OWN_FILES.includes(f);
+    });
+    expect(unregistered).toEqual([]);
   });
 
   it('every template script is the app\'s own or in the gate list', async () => {
