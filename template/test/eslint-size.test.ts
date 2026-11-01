@@ -137,6 +137,8 @@ describe('G04 size gate, run through the real eslint.config.js', () => {
     it('exempts *.test.ts and files under test/, nothing in src', async () => {
       expect(await count(long, FUNCTION_RULE, 'test/probe.ts')).toBe(0);
       expect(await count(long, FUNCTION_RULE, 'lint/probe.test.ts')).toBe(0);
+      // A declaration-file name still matches TEST_FILES (`**/*.test.*`), as the other gates see it.
+      expect(await count(long, FUNCTION_RULE, 'lint/probe.test.d.ts')).toBe(0);
       expect(await count(long, FUNCTION_RULE, MAIN)).toBe(1);
       expect(await count(long, FUNCTION_RULE, RENDERER)).toBe(1);
     });

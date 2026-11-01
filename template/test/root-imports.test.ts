@@ -71,14 +71,35 @@ describe('no parent-relative imports', () => {
     });
   });
 
-  it('says what to write instead', async () => {
-    const [hit] = await errorMessages(
-      "import { a } from '../a';\nexport const b = a;\n",
-      'src/main/index.ts'
-    );
+  // The remedy must work where the file is: each folder names exactly the aliases that resolve there.
+  // Pinned whole, so dropping one alias, the same-folder note or a folder's own line fails.
+  const SAME = "A file in the same folder stays './x'.";
+  const NONE = `No '../' imports: no root alias resolves in this folder. ${SAME}`;
+  const MESSAGES: [string, string[], string][] = [
+    [
+      'main, preload and shared',
+      ['src/main/index.ts', 'src/preload/index.ts', 'src/shared/ipc.ts'],
+      `No '../' imports: use a root alias. @shared/* is src/shared. ${SAME}`,
+    ],
+    [
+      'the renderer',
+      ['src/renderer/src/App.tsx'],
+      `No '../' imports: use a root alias. @/* is src/renderer/src; @shared/* is src/shared. ${SAME}`,
+    ],
+    [
+      'tests',
+      ['test/eslint-size.test.ts', 'test/helpers/scratch.ts'],
+      `No '../' imports: use a root alias. @shared/* is src/shared, @main/* is src/main, @preload/* is src/preload, @lint/* is lint, @root/* is the project root. ${SAME}`,
+    ],
+    ['root configs and lint/', ['vitest.config.ts', 'eslint.config.js', 'lint/probe.js'], NONE],
+  ];
 
-    expect(hit?.message).toContain('use a root alias');
-    expect(hit?.message).toContain('@shared/*');
+  describe.each(MESSAGES)('the message in %s', (_folder, files, message) => {
+    it.each(files)('is exact in %s', async (file) => {
+      const [hit] = await errorMessages("import { a } from '../a';\nexport const b = a;\n", file);
+
+      expect(hit?.message).toBe(message);
+    });
   });
 
   it('keeps the member caps beside it (one options array per file)', async () => {
@@ -124,11 +145,31 @@ describe('the root aliases exist in every place that resolves them', () => {
     });
   });
 
-  it('the type checker resolves them too', () => {
+  it('the type checker resolves them too, tests included', () => {
     expect(tsconfigPaths('tsconfig.node.json')['@shared/*']).toEqual(['src/shared/*']);
+    expect(tsconfigPaths('tsconfig.tests.json')).toEqual({
+      '@shared/*': ['src/shared/*'],
+      '@main/*': ['src/main/*'],
+      '@preload/*': ['src/preload/*'],
+      '@lint/*': ['lint/*'],
+      '@root/*': ['./*'],
+    });
     expect(tsconfigPaths('tsconfig.web.json')).toEqual({
       '@/*': ['src/renderer/src/*'],
       '@shared/*': ['src/shared/*'],
     });
+  });
+
+  it('npm run typecheck covers the tests, so an alias an editor cannot resolve fails the build', () => {
+    const read = (file: string): string => readFileSync(resolve(root, file), 'utf8');
+    const { scripts } = JSON.parse(read('package.json'));
+
+    expect(scripts.typecheck).toBe(
+      'npm run typecheck:node && npm run typecheck:web && npm run typecheck:tests'
+    );
+    expect(scripts['typecheck:tests']).toBe(
+      'tsc --noEmit -p tsconfig.tests.json --composite false'
+    );
+    expect(read('tsconfig.json')).toContain('"./tsconfig.tests.json"');
   });
 });

@@ -10,6 +10,8 @@ const AUTO = new Set([
   'tsconfig.json',
   'tsconfig.node.json',
   'tsconfig.web.json',
+  // AF4: type-checks test/ with the test aliases; tsconfig.json references it.
+  'tsconfig.tests.json',
   'vitest.config.ts',
   'tailwind.config.js',
   'postcss.config.js',

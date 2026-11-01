@@ -115,7 +115,7 @@ describe('G06 the reviewed ESLint complexity block', () => {
   it('turns on exactly the two reviewed SonarJS rules and leaves cyclomatic to Oxlint', async () => {
     const config = await eslint.calculateConfigForFile(resolve(root, MAIN));
     const on = Object.entries(config.rules ?? {})
-      .filter(([, value]) => ![0, 'off'].includes([value].flat()[0]))
+      .filter(([, value]) => ![0, 'off'].some((off) => off === [value].flat()[0]))
       .map(([name]) => name);
 
     expect(on.filter((name) => name.startsWith('sonarjs/'))).toEqual([COGNITIVE, EXPRESSION]);

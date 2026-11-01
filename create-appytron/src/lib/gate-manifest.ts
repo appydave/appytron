@@ -4,16 +4,18 @@
  * Every gate PR that adds a script or devDependency registers it here; test/gate-guard.test.ts fails on a template script or devDependency that is neither listed here nor named app-own in the test.
  */
 // `postinstall` (E1) is not a gate: it is listed so an upgrade also gives existing apps the Electron binary download.
-export const GATE_SCRIPTS = ['lint', 'format:check', 'postinstall', 'dup', 'deadcode'] as const;
+export const GATE_SCRIPTS = ['lint', 'format:check', 'postinstall', 'dup', 'deadcode', 'typecheck:tests'] as const;
 
 /** A row for UPGRADE_TODO.md when the upgrade ADDS the entry (key `section.name`): what the app owner must do by hand. */
 export const ADDED_ENTRY_NOTES: Readonly<Record<string, string>> = {
   'scripts.postinstall':
     'added by this upgrade; it downloads the Electron binary on a plain `npm install`. Set ELECTRON_SKIP_BINARY_DOWNLOAD=1 in your CI install step so CI does not download ~100 MB per run.',
   'scripts.dup':
-    'added by this upgrade; it fails on any block of more than 5 lines and 50 tokens repeated in your source, or in your tests (judged apart). Add `npm run dup` to your CI after `npm run lint`. Fix a clone by extracting the shared code into one function or helper; never mark it ignored (the guard refuses a jscpd ignore comment).',
+    'added by this upgrade; it fails on any block of more than 5 lines and 50 tokens repeated in your source, or in your tests (judged apart). If you use the ci.yml this upgrade wrote, it already runs `npm run dup` after `npm run lint`; if your CI is a file of your own, add `npm run dup` after `npm run lint`. Fix a clone by extracting the shared code into one function or helper; never mark it ignored (the guard refuses a jscpd ignore comment).',
   'scripts.deadcode':
-    'added by this upgrade; it fails on a file nothing imports, an export nothing uses, a dependency nothing needs, and an import cycle. Add `npm run deadcode` to your CI after `npm run dup`. Delete what is dead (or drop the `export` keyword if only its own file uses it); break a cycle by moving the shared piece into a third file; never mark it ignored (the guard refuses the Knip tags). The one exemption is src/main/updater.ts with electron-updater, named in knip.json.',
+    'added by this upgrade; it fails on a file nothing imports, an export nothing uses, a dependency nothing needs, and an import cycle. If you use the ci.yml this upgrade wrote, it already runs `npm run deadcode` after `npm run dup`; if your CI is a file of your own, add `npm run deadcode` after `npm run dup`. Delete what is dead (or drop the `export` keyword if only its own file uses it); break a cycle by moving the shared piece into a third file; never mark it ignored (the guard refuses the Knip tags). A file, export or dependency that only a test uses counts as dead (Knip runs once over everything and once over production code). The exemptions are src/main/updater.ts with electron-updater, and src/main/file-author.ts, all named in knip.json.',
+  'scripts.typecheck:tests':
+    'added by this upgrade; it type-checks test/ and vitest.config.ts with the test aliases (@main, @preload, @lint, @root) through the new tsconfig.tests.json. Your `typecheck` script is yours and was not changed: add `npm run typecheck:tests` to it (the template runs it last), and to your CI if CI calls tsc directly. Fix what it reports in your tests by hand.',
 };
 
 export const GATE_DEV_DEPS = [

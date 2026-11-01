@@ -7,9 +7,6 @@
 const PARENT = String.raw`/^(\.\/+)*\.\.(\/|$)/`;
 const MOCKS = 'mock|doMock|unmock|doUnmock|importActual|importMock|requireActual|requireMock';
 
-const PARENT_IMPORT_MESSAGE =
-  "No '../' imports: use a root alias. @shared/* is src/shared, @/* is src/renderer/src; in tests also @main/* (src/main), @preload/* (src/preload), @lint/* (lint), @root/* (the project root). A file in the same folder stays './x'.";
-
 const parentSpecifier = (node, path) =>
   `${node}:matches([${path}.value=${PARENT}], [${path}.quasis.0.value.cooked=${PARENT}])`;
 
@@ -27,10 +24,45 @@ const parentImportSelectors = [
   ),
 ];
 
-// no-restricted-syntax has one options array per file: G04's member-count selectors and these must
-// be listed together, or the later block silently replaces the earlier.
-export const restrictedSyntax = (sizeSelectors) => [
-  'error',
-  ...sizeSelectors,
-  ...parentImportSelectors.map((selector) => ({ selector, message: PARENT_IMPORT_MESSAGE })),
+const SAME_FOLDER = "A file in the same folder stays './x'.";
+const alias = (names) => `No '../' imports: use a root alias. ${names} ${SAME_FOLDER}`;
+const NO_ALIAS = `No '../' imports: no root alias resolves in this folder. ${SAME_FOLDER}`;
+
+// The remedy must work where the file is, so each folder names only the aliases that resolve there
+// (tsconfig paths, electron.vite.config.ts, vitest.config.ts). First entry is the fallback for any
+// source file no later entry names; a later entry replaces it for its own files.
+const ROOT_IMPORT_SCOPES = [
+  { name: 'fallback', files: ['**/*.{ts,tsx,js,mjs,cjs}'], message: NO_ALIAS },
+  {
+    name: 'node-source',
+    files: ['src/main/**', 'src/preload/**', 'src/shared/**'],
+    message: alias('@shared/* is src/shared.'),
+  },
+  {
+    name: 'renderer',
+    files: ['src/renderer/src/**'],
+    message: alias('@/* is src/renderer/src; @shared/* is src/shared.'),
+  },
+  {
+    name: 'tests',
+    files: ['test/**'],
+    message: alias(
+      '@shared/* is src/shared, @main/* is src/main, @preload/* is src/preload, @lint/* is lint, @root/* is the project root.'
+    ),
+  },
 ];
+
+// no-restricted-syntax has one options array per file: G04's member-count selectors and these must
+// be listed together, or the later block silently replaces the earlier. One config block per scope.
+export const rootImportConfigs = (sizeSelectors) =>
+  ROOT_IMPORT_SCOPES.map(({ name, files, message }) => ({
+    name: `quality/root-imports/${name}`,
+    files,
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...sizeSelectors,
+        ...parentImportSelectors.map((selector) => ({ selector, message })),
+      ],
+    },
+  }));
