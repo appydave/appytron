@@ -99,6 +99,8 @@ describe('A2 one owner per rule: Oxlint owns it, ESLint has it off', () => {
     ['@typescript-eslint/no-explicit-any', 'typescript/no-explicit-any'],
     ['@typescript-eslint/no-non-null-assertion', 'typescript/no-non-null-assertion'],
     ['@typescript-eslint/consistent-type-assertions', 'typescript/consistent-type-assertions'],
+    ['no-magic-numbers', 'no-magic-numbers'],
+    ['@typescript-eslint/no-magic-numbers', 'no-magic-numbers'],
   ])('%s is off in every environment and %s is an error in Oxlint', async (eslintRule, oxRule) => {
     for (const file of ALL_ENVS) {
       expect(await severity(file, eslintRule)).toBe(OFF);
