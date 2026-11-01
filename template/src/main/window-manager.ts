@@ -1,6 +1,9 @@
 import { join } from 'node:path';
 import { BrowserWindow, shell } from 'electron';
 
+const DEFAULT_WINDOW_WIDTH = 1200;
+const DEFAULT_WINDOW_HEIGHT = 800;
+
 export interface WindowOptions {
   width?: number;
   height?: number;
@@ -17,8 +20,8 @@ export class WindowManager {
 
   create(options: WindowOptions = {}): BrowserWindow {
     const win = new BrowserWindow({
-      width: options.width ?? 1200,
-      height: options.height ?? 800,
+      width: options.width ?? DEFAULT_WINDOW_WIDTH,
+      height: options.height ?? DEFAULT_WINDOW_HEIGHT,
       show: false,
       title: options.title,
       titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',

@@ -5,9 +5,18 @@
   "rules": {
     "typescript/no-explicit-any": "error",
     "typescript/no-non-null-assertion": "error",
-    "typescript/consistent-type-assertions": ["error", { "assertionStyle": "never" }]
+    "typescript/consistent-type-assertions": ["error", { "assertionStyle": "never" }],
+    "no-magic-numbers": [
+      "error",
+      { "ignore": [-1, 0, 1, 2], "detectObjects": false, "ignoreDefaultValues": true }
+    ]
   },
   "overrides": [
+    {
+      // Tests out of scope (settings, G05): fixtures and expected values are literals by nature.
+      "files": ["test/**"],
+      "rules": { "no-magic-numbers": "off" }
+    },
     {
       // The one assertion the template keeps: the IPC boundary hands the handler `raw` (unknown) and
       // the Zod schema (or none) decides its type, so `as In` is irreducible without changing
