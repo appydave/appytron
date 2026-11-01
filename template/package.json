@@ -8,6 +8,7 @@
   "author": "David Cruwys",
   "license": "MIT",
   "scripts": {
+    "postinstall": "node -e \"process.env.ELECTRON_SKIP_BINARY_DOWNLOAD || require('electron')\"",
     "dev": "electron-vite dev",
     "start": "electron-vite preview",
     "build": "electron-vite build",
