@@ -61,8 +61,8 @@ function redirectHomeIfRequested(logger: Logger): void {
   const home = process.env['APPYTRON_HOME'];
 
   if (!home) {
-return;
-}
+    return;
+  }
 
   const userData = join(home, 'userData');
   const pictures = join(home, 'pictures');
@@ -73,7 +73,7 @@ return;
   app.setPath('pictures', pictures);
   logger.warn(
     `APPYTRON_HOME=${home}: userData and pictures redirected — isolated run, ` +
-      'no live user data is reachable. Never set this in a real launch.',
+      'no live user data is reachable. Never set this in a real launch.'
   );
 }
 
@@ -103,8 +103,8 @@ export function createConsole(options: CreateConsoleOptions): Console {
 
       app.on('activate', () => {
         if (windows.all().length === 0) {
-options.onReady(ctx);
-}
+          options.onReady(ctx);
+        }
       });
       app.on('window-all-closed', () => {
         if (process.platform !== 'darwin') {

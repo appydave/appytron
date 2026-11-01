@@ -2,13 +2,7 @@ import { autoUpdater } from 'electron-updater';
 import type { Logger } from '@appydave/core';
 
 export type UpdateStatus =
-  | 'idle'
-  | 'checking'
-  | 'available'
-  | 'not-available'
-  | 'downloading'
-  | 'downloaded'
-  | 'error';
+  'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
 
 export interface UpdateState {
   status: UpdateStatus;
@@ -36,14 +30,14 @@ export class Updater {
     autoUpdater.autoDownload = options.autoDownload ?? false;
     autoUpdater.on('checking-for-update', () => this.set({ status: 'checking' }));
     autoUpdater.on('update-available', (info) =>
-      this.set({ status: 'available', version: info.version }),
+      this.set({ status: 'available', version: info.version })
     );
     autoUpdater.on('update-not-available', () => this.set({ status: 'not-available' }));
     autoUpdater.on('download-progress', (p) =>
-      this.set({ status: 'downloading', percent: Math.round(p.percent) }),
+      this.set({ status: 'downloading', percent: Math.round(p.percent) })
     );
     autoUpdater.on('update-downloaded', (info) =>
-      this.set({ status: 'downloaded', version: info.version }),
+      this.set({ status: 'downloaded', version: info.version })
     );
     autoUpdater.on('error', (err) => this.set({ status: 'error', error: String(err) }));
   }
@@ -74,7 +68,7 @@ export class Updater {
     this.state = { ...this.state, ...patch };
     this.options.logger?.info({ update: this.state }, 'updater state');
     for (const cb of this.cbs) {
-cb(this.state);
-}
+      cb(this.state);
+    }
   }
 }

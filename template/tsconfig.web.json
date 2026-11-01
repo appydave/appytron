@@ -18,9 +18,5 @@
     },
     "types": ["node"]
   },
-  "include": [
-    "src/renderer/src/**/*",
-    "src/preload/**/*.d.ts",
-    "src/shared/**/*"
-  ]
+  "include": ["src/renderer/src/**/*", "src/preload/**/*.d.ts", "src/shared/**/*"]
 }
