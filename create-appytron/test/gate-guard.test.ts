@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { classify } from '../src/lib/classify';
-import { CREATE_IF_ABSENT, GATE_DEV_DEPS, GATE_SCRIPTS } from '../src/lib/gate-manifest';
+import { ADDED_ENTRY_NOTES, CREATE_IF_ABSENT, GATE_DEV_DEPS, GATE_SCRIPTS } from '../src/lib/gate-manifest';
 
 const TEMPLATE = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'template');
 
@@ -135,6 +135,11 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
   ])('the ci.yml onWrite row says: %s', (sentence) => {
     const row = CREATE_IF_ABSENT.find((c) => c.to === '.github/workflows/ci.yml')?.onWrite;
     expect(row).toContain(sentence);
+  });
+
+  // An upgraded app keeps its own ci.yml (never overwritten), so this sentence is the only thing that makes it run the gate.
+  it('the scripts.dup note tells an upgraded app to put `npm run dup` in its CI', () => {
+    expect(ADDED_ENTRY_NOTES['scripts.dup']).toContain('Add `npm run dup` to your CI after `npm run lint`');
   });
 
   it('the dup script, jscpd and both configs are registered, so an upgrade carries them', async () => {
