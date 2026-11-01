@@ -53,6 +53,11 @@ export function ownVersion(): string {
   return (JSON.parse(readFileSync(pkg, 'utf8')) as { version: string }).version;
 }
 
+/**
+ * The template ships its ignore file as `gitignore`: npm pack drops any `.gitignore` from a tarball, so a dotfile would
+ * vanish on publish. A scaffold writes it back as `.gitignore`, at the app root only.
+ */
+const SHIPPED_GITIGNORE = 'gitignore';
 const TEMPLATE_APP_NAME = 'appytron-app';
 // The template's own @appydave/core spec (template/package.json); a scaffold rewrites it to the chosen version or a link.
 const CORE_DEV_DEP = '^0.2.0';
@@ -73,8 +78,9 @@ async function copyTree(
   for (const entry of await fs.readdir(src, { withFileTypes: true })) {
     if (SKIP.has(entry.name)) continue;
     const from = join(src, entry.name);
-    const to = join(dest, entry.name);
-    const rel = relative(base, from);
+    const shipped = relative(base, from);
+    const rel = shipped === SHIPPED_GITIGNORE ? '.gitignore' : shipped;
+    const to = join(dest, shipped === SHIPPED_GITIGNORE ? rel : entry.name);
     if (entry.isDirectory()) {
       await copyTree(from, to, opts, base, acc);
     } else if (opts.merge && existsSync(to) && !opts.force) {

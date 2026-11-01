@@ -13,7 +13,6 @@ const AUTO = new Set([
   'vitest.config.ts',
   'tailwind.config.js',
   'postcss.config.js',
-  '.gitignore',
   'src/main/window-manager.ts',
   'src/main/ipc-router.ts',
   'src/main/create-console.ts',
@@ -25,7 +24,14 @@ const AUTO = new Set([
 ]);
 
 /** Project identity — never overwritten by an upgrade. */
-const OWNED = new Set(['package.json', 'electron-builder.yml', 'appytron.json']);
+const OWNED = new Set([
+  'package.json',
+  'electron-builder.yml',
+  'appytron.json',
+  // The ignore file is the app's once scaffolded: a customised one must survive an upgrade. Template name and generated name.
+  'gitignore',
+  '.gitignore',
+]);
 
 /**
  * Classify a template-relative path into an upgrade tier:

@@ -132,4 +132,23 @@ describe('scaffold', () => {
     expect(yml).toContain('repo: zapp');
     expect(yml).not.toContain('appytron-app');
   });
+
+  it('writes the shipped `gitignore` as `.gitignore`, and not under its shipped name', async () => {
+    const res = await scaffold({ templateDir: TEMPLATE, targetDir: target, appName: 'ign' });
+    const shipped = await fs.readFile(join(TEMPLATE, 'gitignore'), 'utf8');
+    expect(await fs.readFile(join(target, '.gitignore'), 'utf8')).toBe(shipped);
+    await expect(fs.access(join(target, 'gitignore'))).rejects.toThrow();
+    expect(shipped).toMatch(/^node_modules\/$/m);
+    expect(shipped).toMatch(/^out\/$/m);
+    expect(res.skipped).not.toContain('.gitignore');
+  });
+
+  it('merge mode never clobbers an existing .gitignore, and reports it skipped', async () => {
+    await fs.mkdir(target, { recursive: true });
+    await fs.writeFile(join(target, '.gitignore'), 'mine\n');
+    const res = await scaffold({ templateDir: TEMPLATE, targetDir: target, appName: 'ign', merge: true });
+    expect(await fs.readFile(join(target, '.gitignore'), 'utf8')).toBe('mine\n');
+    expect(res.skipped).toContain('.gitignore');
+    await expect(fs.access(join(target, 'gitignore'))).rejects.toThrow();
+  });
 });

@@ -56,6 +56,17 @@ describe('upgrade', () => {
     }
   });
 
+  it('never overwrites a customised .gitignore, and plans nothing for the shipped `gitignore`', async () => {
+    await fs.writeFile(join(target, '.gitignore'), 'custom\n');
+    const plan = await planUpgrade(TEMPLATE, target);
+    expect(plan.entries.filter((e) => e.path.endsWith('gitignore')).map((e) => e.action)).toEqual(['skip']);
+    const res = await runUpgrade(TEMPLATE, target, { now: '2026-02-02T00:00:00Z' });
+    expect(res.applied).not.toContain('.gitignore');
+    expect(res.applied).not.toContain('gitignore');
+    expect(await fs.readFile(join(target, '.gitignore'), 'utf8')).toBe('custom\n');
+    await expect(fs.access(join(target, 'gitignore'))).rejects.toThrow();
+  });
+
   it('recipe files go to review, and apply only with --yes', async () => {
     const recipe = join(target, '.claude/skills/recipe/references/wrap-cli.md');
     await fs.writeFile(recipe, '# modified\n');
