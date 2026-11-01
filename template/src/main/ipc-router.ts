@@ -23,14 +23,19 @@ export class IpcRouter {
     this.channels.push(def.channel);
     ipcMain.handle(def.channel, async (_event, raw: unknown) => {
       const input = (def.input ? def.input.parse(raw) : raw) as In;
+
       return def.handle(input);
     });
+
     return this;
   }
 
   /** Remove all registered handlers (called on lifecycle stop). */
   dispose(): void {
-    for (const channel of this.channels) ipcMain.removeHandler(channel);
+    for (const channel of this.channels) {
+      ipcMain.removeHandler(channel);
+    }
+
     this.channels = [];
   }
 }

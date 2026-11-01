@@ -7,11 +7,13 @@ import { createConsole } from './create-console.js';
 // Local-first persistence via @appydave/core Store. Lazily created (needs app-ready
 // for userData path); the JSON survives restarts — proving the Store round-trip.
 let counterStore: Store<{ count: number }> | null = null;
+
 function counter(): Store<{ count: number }> {
   counterStore ??= createStore<{ count: number }>({
     path: join(app.getPath('userData'), 'counter.json'),
     defaults: { count: 0 },
   });
+
   return counterStore;
 }
 

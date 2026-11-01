@@ -42,9 +42,11 @@ export class FileAuthor {
   private safe(relPath: string): string {
     const abs = resolve(this.root, relPath);
     const rel = relative(this.root, abs);
+
     if (rel === '' || rel.startsWith('..') || isAbsolute(rel)) {
       throw new Error(`FileAuthor: path escapes root: ${relPath}`);
     }
+
     return abs;
   }
 
@@ -54,23 +56,32 @@ export class FileAuthor {
     message?: string,
   ): Promise<AuthorResult> {
     const abs = this.safe(relPath);
+
     await fs.mkdir(dirname(abs), { recursive: true });
     await atomicWrite(abs, content);
+
     return this.commit(relPath, message ?? `author: write ${relPath}`);
   }
 
   async delete(relPath: string, message?: string): Promise<AuthorResult> {
     const abs = this.safe(relPath);
+
     await fs.rm(abs, { force: true });
+
     return this.commit(relPath, message ?? `author: delete ${relPath}`);
   }
 
   private async commit(relPath: string, message: string): Promise<AuthorResult> {
-    if (!this.git) return { path: relPath, committed: false };
+    if (!this.git) {
+return { path: relPath, committed: false };
+}
+
     try {
       await exec('git', ['add', '--', relPath], { cwd: this.root });
       await exec('git', ['commit', '--quiet', '-m', message, '--', relPath], { cwd: this.root });
+
       const { stdout } = await exec('git', ['rev-parse', 'HEAD'], { cwd: this.root });
+
       return { path: relPath, committed: true, commit: stdout.trim() };
     } catch {
       // Not a git repo, or nothing to commit — the write still succeeded.

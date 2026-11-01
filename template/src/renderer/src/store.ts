@@ -17,18 +17,22 @@ export const useAppStore = create<AppState>((set) => ({
   count: null,
   loadInfo: async () => {
     const info = await window.appytron.getAppInfo();
+
     set({ info });
   },
   sendPing: async (message: string) => {
     const pong = await window.appytron.ping(message);
+
     set({ pong });
   },
   loadCount: async () => {
     const count = await window.appytron.counter.get();
+
     set({ count });
   },
   increment: async () => {
     const count = await window.appytron.counter.increment();
+
     set({ count });
   },
 }));
