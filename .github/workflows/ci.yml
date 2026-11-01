@@ -48,6 +48,20 @@ jobs:
           node-version: '24'
       - run: .github/scripts/scaffold-check.sh
 
+  # E1: a plain install of a fresh scaffold must leave the Electron binary electron-vite looks for. Downloads the
+  # binary (the other jobs skip it), so it is its own job; the planted break (no postinstall) must fail.
+  electron-binary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: .github/scripts/electron-binary-check.sh
+      - name: planted break must fail
+        run: |
+          if .github/scripts/electron-binary-check.sh "$(mktemp -d)" --break; then echo "planted break passed"; exit 1; fi
+
   # An app scaffolded from the PUBLISHED create-appytron@0.2.0 must lint after the upgrade from this branch.
   # Uses the npm registry; the planted-break run must fail.
   upgrade-proof:

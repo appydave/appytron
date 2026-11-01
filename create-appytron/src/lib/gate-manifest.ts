@@ -3,7 +3,8 @@
  * command or version range is read from the template's package.json, so no value lives twice).
  * Every gate PR that adds a script or devDependency registers it here; test/gate-guard.test.ts fails on a template script or devDependency that is neither listed here nor named app-own in the test.
  */
-export const GATE_SCRIPTS = ['lint', 'format:check'] as const;
+// `postinstall` (E1) is not a gate: it is listed so an upgrade also gives existing apps the Electron binary download.
+export const GATE_SCRIPTS = ['lint', 'format:check', 'postinstall'] as const;
 
 export const GATE_DEV_DEPS = [
   '@eslint/js',
