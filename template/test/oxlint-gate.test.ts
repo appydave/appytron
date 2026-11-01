@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -71,6 +71,87 @@ describe('G02 Oxlint type-lie gate, run through the real .oxlintrc.json', () => 
   });
 });
 
+// The config is JSON with // comments: drop whole-line comments, then parse.
+const config: unknown = JSON.parse(
+  readFileSync(join(root, '.oxlintrc.json'), 'utf8').replace(/^\s*\/\/.*$/gm, '')
+);
+const EXEMPT = 'src/main/ipc-router.ts';
+const CAST = 'declare const v: unknown;\nexport const s = v as string;\n';
+
+// Overrides match paths relative to the config, so the probe gets a scratch copy of the real config
+// with the file at the path under test (never planted in the real template: other tests read it).
+function oxlintAt(file: string, source: string): { failed: boolean; output: string } {
+  const dir = scratchDir();
+
+  mkdirSync(join(dir, file, '..'), { recursive: true });
+  writeFileSync(join(dir, '.oxlintrc.json'), readFileSync(join(root, '.oxlintrc.json')));
+  writeFileSync(join(dir, file), source);
+
+  const run = spawnSync(
+    oxlint,
+    ['--deny-warnings', '--format=default', '-c', '.oxlintrc.json', '.'],
+    {
+      cwd: dir,
+      encoding: 'utf8',
+    }
+  );
+
+  return { failed: run.status !== 0, output: run.stdout };
+}
+
+function configFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (entry.isDirectory()) {
+      return ['node_modules', 'out', '.git'].includes(entry.name)
+        ? []
+        : configFiles(join(dir, entry.name)).map((f) => `${entry.name}/${f}`);
+    }
+
+    return entry.name === '.oxlintrc.json' ? [entry.name] : [];
+  });
+}
+
+describe('G02 Oxlint allowlist: one file may cast, nothing else', () => {
+  // The whole file is pinned, not just overrides: widening ignorePatterns, adding a rule off or
+  // dropping a plugin would switch the gate off silently. Any change must edit this test too.
+  it('is exactly the reviewed config, with one exempt file named exactly', () => {
+    expect(config).toEqual({
+      $schema: './node_modules/oxlint/configuration_schema.json',
+      plugins: ['typescript', 'react'],
+      ignorePatterns: ['**/out/**', '**/dist/**', '**/coverage/**', '**/node_modules/**'],
+      rules: {
+        'typescript/no-explicit-any': 'error',
+        'typescript/no-non-null-assertion': 'error',
+        'typescript/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
+      },
+      overrides: [{ files: [EXEMPT], rules: { 'typescript/consistent-type-assertions': 'off' } }],
+    });
+  });
+
+  // Oxlint finds a nested .oxlintrc.json on its own and applies it below its folder, which would
+  // switch these rules off there without touching the file pinned above.
+  it('is the only .oxlintrc.json in the tree', () => {
+    expect(configFiles(root)).toEqual(['.oxlintrc.json']);
+  });
+
+  it('lets the exempt file cast', () => {
+    expect(oxlintAt(EXEMPT, CAST).failed).toBe(false);
+  });
+
+  it('still fails a cast in any other file, including a sibling and a same-named file elsewhere', () => {
+    for (const file of ['src/main/other.ts', 'src/renderer/src/ipc-router.ts', 'ipc-router.ts']) {
+      expect(oxlintAt(file, CAST).failed).toBe(true);
+    }
+  });
+
+  it('still fails every other rule inside the exempt file', () => {
+    expect(oxlintAt(EXEMPT, 'export const a: any = 1;\n').output).toContain('no-explicit-any');
+    expect(
+      oxlintAt(EXEMPT, 'declare const v: string | null;\nexport const s = v!;\n').output
+    ).toContain('no-non-null-assertion');
+  });
+});
+
 describe('G02 one owner per rule', () => {
   it('ESLint has the Oxlint-owned rules switched off', async () => {
     const config: { rules: Record<string, unknown> } = await new ESLint({
@@ -81,6 +162,16 @@ describe('G02 one owner per rule', () => {
     expect(off('@typescript-eslint/no-explicit-any')).toBe(true);
     expect(off('@typescript-eslint/no-non-null-assertion')).toBe(true);
     expect(off('@typescript-eslint/consistent-type-assertions')).toBe(true);
+  });
+
+  it('ESLint does not turn the assertion rule back on for the exempt file', async () => {
+    const config: { rules: Record<string, unknown> } = await new ESLint({
+      cwd: root,
+    }).calculateConfigForFile(resolve(root, EXEMPT));
+
+    expect([[config.rules['@typescript-eslint/consistent-type-assertions']].flat()[0]]).toEqual([
+      0,
+    ]);
   });
 });
 

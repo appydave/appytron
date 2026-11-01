@@ -1,19 +1,12 @@
 import { ipcMain } from 'electron';
 import { z } from '@appydave/core';
 
-/** A handler whose payload is Zod-validated first: `handle` receives the parsed, typed value. */
-export interface ValidatedHandlerDef<In, Out> {
+export interface HandlerDef<In, Out> {
   /** Channel name (from `@shared/ipc`'s `IPC` map). */
   channel: string;
-  input: z.ZodType<In>;
+  /** Optional Zod schema — the payload is validated before `handle` runs. */
+  input?: z.ZodType<In>;
   handle: (input: In) => Promise<Out> | Out;
-}
-
-/** A handler with no schema: the payload is untrusted, so `handle` receives `unknown` and must check it. */
-export interface UnvalidatedHandlerDef<Out> {
-  channel: string;
-  input?: undefined;
-  handle: (input: unknown) => Promise<Out> | Out;
 }
 
 /**
@@ -26,14 +19,12 @@ export interface UnvalidatedHandlerDef<Out> {
 export class IpcRouter {
   private channels: string[] = [];
 
-  /** Validated: `handle` gets the parsed `In`. */
-  register<In, Out>(def: ValidatedHandlerDef<In, Out>): this;
-  /** No schema: `handle` gets `unknown`. The first type argument is accepted for old call sites and unused. */
-  register<_In, Out>(def: UnvalidatedHandlerDef<Out>): this;
-  register<In, Out>(def: ValidatedHandlerDef<In, Out> | UnvalidatedHandlerDef<Out>): this {
+  register<In, Out>(def: HandlerDef<In, Out>): this {
     this.channels.push(def.channel);
     ipcMain.handle(def.channel, async (_event, raw: unknown) => {
-      return def.input ? def.handle(def.input.parse(raw)) : def.handle(raw);
+      const input = (def.input ? def.input.parse(raw) : raw) as In;
+
+      return def.handle(input);
     });
 
     return this;
