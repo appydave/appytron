@@ -33,8 +33,10 @@ export class ProcessSupervisor {
 
   spawn(options: SpawnOptions): ManagedProcess {
     const managed = new Managed(options);
+
     this.procs.set(managed.id, managed);
     managed.onExit(() => this.procs.delete(managed.id));
+
     return managed;
   }
 
@@ -47,7 +49,9 @@ export class ProcessSupervisor {
   }
 
   stopAll(signal?: NodeJS.Signals): void {
-    for (const proc of this.procs.values()) proc.stop(signal);
+    for (const proc of this.procs.values()) {
+      proc.stop(signal);
+    }
   }
 }
 
@@ -71,7 +75,9 @@ class Managed implements ManagedProcess {
     });
     this.child.on('exit', (code) => {
       this._status = 'exited';
-      for (const cb of this.exitCbs) cb(code);
+      for (const cb of this.exitCbs) {
+        cb(code);
+      }
     });
   }
 
@@ -84,16 +90,20 @@ class Managed implements ManagedProcess {
   }
 
   private emitLog(stream: 'stdout' | 'stderr', data: string): void {
-    for (const cb of this.logCbs) cb({ stream, data });
+    for (const cb of this.logCbs) {
+      cb({ stream, data });
+    }
   }
 
   onLog(cb: (chunk: LogChunk) => void): () => void {
     this.logCbs.add(cb);
+
     return () => this.logCbs.delete(cb);
   }
 
   onExit(cb: (code: number | null) => void): () => void {
     this.exitCbs.add(cb);
+
     return () => this.exitCbs.delete(cb);
   }
 

@@ -54,6 +54,7 @@ export class Updater {
 
   onChange(cb: (state: UpdateState) => void): () => void {
     this.cbs.add(cb);
+
     return () => this.cbs.delete(cb);
   }
 
@@ -72,6 +73,8 @@ export class Updater {
   private set(patch: Partial<UpdateState>): void {
     this.state = { ...this.state, ...patch };
     this.options.logger?.info({ update: this.state }, 'updater state');
-    for (const cb of this.cbs) cb(this.state);
+    for (const cb of this.cbs) {
+cb(this.state);
+}
   }
 }

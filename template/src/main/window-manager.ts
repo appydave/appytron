@@ -38,11 +38,13 @@ export class WindowManager {
     win.on('closed', () => this.windows.delete(win));
     win.webContents.setWindowOpenHandler(({ url }) => {
       void shell.openExternal(url);
+
       return { action: 'deny' };
     });
 
     // electron-vite sets ELECTRON_RENDERER_URL in dev; packaged builds load the file.
     const devUrl = process.env['ELECTRON_RENDERER_URL'];
+
     if (devUrl) {
       void win.loadURL(devUrl);
     } else {
@@ -50,6 +52,7 @@ export class WindowManager {
     }
 
     this.windows.add(win);
+
     return win;
   }
 

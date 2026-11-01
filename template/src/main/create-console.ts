@@ -59,9 +59,14 @@ export interface CreateConsoleOptions {
  */
 function redirectHomeIfRequested(logger: Logger): void {
   const home = process.env['APPYTRON_HOME'];
-  if (!home) return;
+
+  if (!home) {
+return;
+}
+
   const userData = join(home, 'userData');
   const pictures = join(home, 'pictures');
+
   mkdirSync(userData, { recursive: true, mode: 0o700 });
   mkdirSync(pictures, { recursive: true, mode: 0o700 });
   app.setPath('userData', userData);
@@ -97,7 +102,9 @@ export function createConsole(options: CreateConsoleOptions): Console {
       options.onReady(ctx);
 
       app.on('activate', () => {
-        if (windows.all().length === 0) options.onReady(ctx);
+        if (windows.all().length === 0) {
+options.onReady(ctx);
+}
       });
       app.on('window-all-closed', () => {
         if (process.platform !== 'darwin') {
