@@ -29,6 +29,12 @@ const FORBIDDEN: [string, string][] = [
   ['typeof import type', "export type B = typeof import('../a');\n"],
   ['vi.mock', "vi.mock('../a');\n"],
   ['vi.importActual', "export const b = await vi.importActual('../a');\n"],
+  ['vi.doMock', "vi.doMock('../a');\n"],
+  ['vi.unmock', "vi.unmock('../a');\n"],
+  ['vi.doUnmock', "vi.doUnmock('../a');\n"],
+  ['vi.importMock', "export const b = await vi.importMock('../a');\n"],
+  ['vi.requireActual', "export const b = vi.requireActual('../a');\n"],
+  ['vi.requireMock', "export const b = vi.requireMock('../a');\n"],
   ['bare parent', "import { a } from '..';\nexport const b = a;\n"],
   ['dot-slash parent', "import { a } from './../a';\nexport const b = a;\n"],
   ['doubled slash parent', "import { a } from './/../a';\nexport const b = a;\n"],
@@ -40,6 +46,7 @@ const ALLOWED: [string, string][] = [
   ['root alias', "import { a } from '@shared/ipc';\nexport const b = a;\n"],
   ['path string for the filesystem', "export const p = join(__dirname, '../preload/index.mjs');\n"],
   ['plain string that starts with ..', "export const p = '../escape.txt';\n"],
+  ['package path containing /../', "import { a } from 'pkg/../y';\nexport const b = a;\n"],
   ['dotted name, not a parent', "import { a } from '..hidden/a';\nexport const b = a;\n"],
 ];
 

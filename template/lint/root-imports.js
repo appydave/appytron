@@ -2,7 +2,8 @@
 // Caught: import / import type, export from, import(), typeof import(), import x = require(),
 // require(), and vi.mock / doMock / unmock / doUnmock / importActual / importMock / requireActual /
 // requireMock. NOT caught: import.meta.glob('../x'), a vi that has been aliased, a specifier built
-// at run time. Filesystem strings such as join(__dirname, '../preload') are not specifiers and stay allowed.
+// at run time, require.resolve('../x'), `/// <reference path>`, `declare module '../x'`, vi['mock'](...).
+// Filesystem strings such as join(__dirname, '../preload') are not specifiers and stay allowed.
 const PARENT = String.raw`/^(\.\/+)*\.\.(\/|$)/`;
 const MOCKS = 'mock|doMock|unmock|doUnmock|importActual|importMock|requireActual|requireMock';
 
