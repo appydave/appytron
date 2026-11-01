@@ -145,6 +145,7 @@ describe('A2 one owner per rule: Oxlint owns it, ESLint has it off', () => {
     ['@typescript-eslint/consistent-type-assertions', 'typescript/consistent-type-assertions'],
     ['no-magic-numbers', 'no-magic-numbers'],
     ['@typescript-eslint/no-magic-numbers', 'no-magic-numbers'],
+    ['complexity', 'complexity'],
   ])('%s is off in every environment and %s is an error in Oxlint', async (eslintRule, oxRule) => {
     for (const file of ALL_ENVS) {
       expect(await severity(file, eslintRule)).toBe(OFF);
@@ -160,6 +161,32 @@ describe('A2 one owner per rule: Oxlint owns it, ESLint has it off', () => {
   ])('%s is off in ESLint and %s is on in Oxlint', async (eslintRule, oxRule, file) => {
     expect(await severity(file, eslintRule)).toBe(OFF);
     expect(['warn', 'error', 'deny']).toContain(oxlintSeverity(oxRule));
+  });
+});
+
+// G06: cyclomatic is Oxlint's alone; cognitive and expression are SonarJS's, on in source and out in
+// tests. The sonarjs cyclomatic rule is the second owner and must never be on in any environment.
+describe('G06 complexity rules per environment', () => {
+  const SOURCE_ENVS = ALL_ENVS.filter((file) => file !== TEST);
+
+  it.each(SOURCE_ENVS)('%s: cognitive 8 and expression 3 are errors', async (file) => {
+    expect(await ruleEntry(file, 'sonarjs/cognitive-complexity')).toEqual([ERROR, 8]);
+    expect(await ruleEntry(file, 'sonarjs/expression-complexity')).toEqual([ERROR, { max: 3 }]);
+  });
+
+  it('the test environment has neither (tests are out of scope)', async () => {
+    expect(await severity(TEST, 'sonarjs/cognitive-complexity')).toBeUndefined();
+    expect(await severity(TEST, 'sonarjs/expression-complexity')).toBeUndefined();
+  });
+
+  it.each(ALL_ENVS)('%s: no second owner of cyclomatic complexity', async (file) => {
+    expect([undefined, OFF]).toContain(await severity(file, 'sonarjs/cyclomatic-complexity'));
+    expect(await severity(file, 'complexity')).toBe(OFF);
+  });
+
+  it('Oxlint owns cyclomatic complexity at max 6', () => {
+    // print-config nests the options one level deeper than the config file does.
+    expect([oxlintRules.complexity].flat(2)).toEqual(['deny', { max: 6 }]);
   });
 });
 

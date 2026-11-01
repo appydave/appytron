@@ -120,6 +120,7 @@ describe('G02 Oxlint allowlist: one file may cast, nothing else', () => {
       plugins: ['typescript', 'react'],
       ignorePatterns: ['**/out/**', '**/dist/**', '**/coverage/**', '**/node_modules/**'],
       rules: {
+        complexity: ['error', { max: 6 }],
         'typescript/no-explicit-any': 'error',
         'typescript/no-non-null-assertion': 'error',
         'typescript/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
@@ -134,7 +135,7 @@ describe('G02 Oxlint allowlist: one file may cast, nothing else', () => {
         ],
       },
       overrides: [
-        { files: ['test/**'], rules: { 'no-magic-numbers': 'off' } },
+        { files: ['test/**'], rules: { 'no-magic-numbers': 'off', complexity: 'off' } },
         { files: [EXEMPT], rules: { 'typescript/consistent-type-assertions': 'off' } },
       ],
     });
@@ -217,6 +218,55 @@ describe('G05 no-magic-numbers, run through the real .oxlintrc.json', () => {
 
   it('fails in the exempt cast file too: the exemption is for assertions only', () => {
     expect(oxlintAt(EXEMPT, 'declare function f(n: number): void;\nf(1200);\n').failed).toBe(true);
+  });
+});
+
+describe('G06 cyclomatic complexity, run through the real .oxlintrc.json', () => {
+  const SRC = 'src/main/probe.ts';
+  const MAX = 6;
+  // n sequential ifs: cyclomatic n + 1.
+  const ifs = (n: number): string =>
+    `export function f(a: number) {\n${'  if (a) {\n    a += 1;\n  }\n\n'.repeat(n)}  return a;\n}\n`;
+  // A switch over n members of a union: cyclomatic n + 1 (the default adds none).
+  const union = (n: number): string => {
+    const members = Array.from({ length: n }, (_, i) => `'m${i}'`);
+    const cases = members.map((m) => `    case ${m}:\n      return 1;\n`).join('');
+
+    return `type U = ${members.join(' | ')};\n\nexport function g(u: U): number {\n  switch (u) {\n${cases}    default:\n      return 0;\n  }\n}\n`;
+  };
+
+  it('rejects cyclomatic 7 and allows 6, and says what the limit is', () => {
+    const bad = oxlintAt(SRC, ifs(MAX));
+
+    expect(bad.failed).toBe(true);
+    expect(bad.output).toContain('complexity of 7. Maximum allowed is 6');
+    expect(oxlintAt(SRC, ifs(MAX - 1)).failed).toBe(false);
+  });
+
+  // Calibration: the widest switch in the template is none, so 6 stays. A switch over a union of 5
+  // members is cyclomatic 6 and passes; a 6th member fails and is split (a lookup table or two functions).
+  it('lets a switch over a 5-member union through and fails a 6-member one', () => {
+    expect(oxlintAt(SRC, union(MAX - 1)).failed).toBe(false);
+    expect(oxlintAt(SRC, union(MAX)).failed).toBe(true);
+  });
+
+  it.each([
+    'src/renderer/src/probe.tsx',
+    'src/preload/probe.ts',
+    'src/shared/probe.ts',
+    'probe.mjs',
+  ])('checks %s', (file) => {
+    // Plain JavaScript text, so the .mjs parses too; the message proves the rule ran, not a parse error.
+    expect(oxlintAt(file, ifs(MAX).replace(': number', '')).output).toContain('complexity of 7');
+  });
+
+  it('is out of scope in test/ only', () => {
+    expect(oxlintAt('test/probe.test.ts', ifs(MAX)).failed).toBe(false);
+    expect(oxlintAt('src/test/probe.ts', ifs(MAX)).failed).toBe(true);
+  });
+
+  it('fails in the exempt cast file too: the exemption is for assertions only', () => {
+    expect(oxlintAt(EXEMPT, ifs(MAX)).failed).toBe(true);
   });
 });
 
