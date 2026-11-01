@@ -94,6 +94,45 @@ describe('A2 effective ESLint config, per environment', () => {
   });
 });
 
+// A4: G04's size limits as ESLint applies them. Severity and numbers are pinned, so a dropped rule, a
+// warning or a looser limit fails here; behaviour is proved in eslint-size.test.ts.
+const COUNTING = { skipBlankLines: true, skipComments: true };
+const SIZE_RULES: [string, unknown[]][] = [
+  ['size/max-lines-per-function', [{ max: 60, ...COUNTING, IIFEs: true }]],
+  ['max-params', [{ max: 4 }]],
+  ['max-lines', [{ max: 300, ...COUNTING }]],
+];
+
+async function ruleEntry(file: string, rule: string): Promise<unknown[]> {
+  const config = await eslint.calculateConfigForFile(resolve(root, file));
+
+  return [config.rules?.[rule]].flat();
+}
+
+describe('A4 size rules are errors with the ruled limits, in every environment', () => {
+  const cases = ALL_ENVS.flatMap((file) =>
+    SIZE_RULES.map(([rule, options]) => [file, rule, options])
+  );
+
+  it.each(cases)('%s: %s', async (file, rule, options) => {
+    expect(await ruleEntry(String(file), String(rule))).toEqual([ERROR, ...[options].flat()]);
+  });
+
+  it.each(ALL_ENVS)(
+    '%s: no-restricted-syntax caps class, interface and object type at 30 members',
+    async (file) => {
+      const [level, ...restrictions] = await ruleEntry(file, 'no-restricted-syntax');
+
+      expect(level).toBe(ERROR);
+      expect(restrictions).toEqual([
+        expect.objectContaining({ selector: 'ClassBody[body.length>30]' }),
+        expect.objectContaining({ selector: 'TSInterfaceBody[body.length>30]' }),
+        expect.objectContaining({ selector: 'TSTypeLiteral[members.length>30]' }),
+      ]);
+    }
+  );
+});
+
 describe('A2 one owner per rule: Oxlint owns it, ESLint has it off', () => {
   it.each([
     ['@typescript-eslint/no-explicit-any', 'typescript/no-explicit-any'],

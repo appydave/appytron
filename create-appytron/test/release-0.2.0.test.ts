@@ -98,13 +98,23 @@ describe('Feature: the pack script run as prepack and postpack do', () => {
   });
 
   // npm runs `node scripts/bundle-template.mjs` with the package folder as cwd. The script's main-module guard compares
-  // import.meta.url (symlink-resolved) with argv[1]; the relative lifecycle form must still bundle when the folder is
-  // reached through a symlink. (An ABSOLUTE symlinked path skips the guard and does nothing; npm never calls it that way.)
+  // import.meta.url (symlink-resolved) with argv[1]; the guard compares realpaths of both, so the relative lifecycle form
+  // and an ABSOLUTE symlinked path both bundle. (Before: the absolute symlinked form exited 0, printed nothing and bundled
+  // nothing, so a publish through a symlinked checkout would have shipped a package without its template.)
   it('Scenario: given the package folder is reached through a symlink, when prepack runs as npm runs it (relative path, package cwd), then the template is still bundled', async () => {
     const link = join(tmp, 'via-link');
     await fs.symlink(pkg, link);
     execFileSync('node', ['scripts/bundle-template.mjs'], { cwd: link, encoding: 'utf8' });
     expect(await exists(join(pkg, 'template', 'package.json'))).toBe(true);
+  });
+
+  it('Scenario: given the script is run through an absolute symlinked path, when it runs, then the template is bundled and --clean removes it', async () => {
+    const link = join(tmp, 'abs-link');
+    await fs.symlink(pkg, link);
+    execFileSync('node', [join(link, 'scripts', 'bundle-template.mjs')], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    expect(await exists(join(pkg, 'template', 'package.json'))).toBe(true);
+    execFileSync('node', [join(link, 'scripts', 'bundle-template.mjs'), '--clean'], { encoding: 'utf8' });
+    expect(await exists(join(pkg, 'template'))).toBe(false);
   });
 
   // Round-1 finding, fixed in round 2: the script logged on STDOUT, and npm passes lifecycle stdout through, so

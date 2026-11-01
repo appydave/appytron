@@ -5,7 +5,7 @@
 // the package root — so `files: ["template/"]` matched nothing and create-appytron@0.1.0 shipped without it
 // (docs/BUILD-LOG.md, 2026-08-29). `prepack` copies it in; `postpack` removes the copy again, because
 // resolveTemplateDir() prefers a bundled ./template over the repo one and a stale copy would shadow it in dev.
-import { promises as fs } from 'node:fs';
+import { promises as fs, realpathSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,7 +24,8 @@ export async function cleanTemplate(to) {
   await fs.rm(to, { recursive: true, force: true });
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// realpath both sides: node keeps argv[1] as typed but import.meta.url is the resolved path, so a symlinked folder skipped this block.
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const pkg = resolve(dirname(fileURLToPath(import.meta.url)), '..');
   const to = join(pkg, 'template');
   if (process.argv.includes('--clean')) {
