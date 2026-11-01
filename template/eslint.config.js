@@ -1,8 +1,10 @@
 import js from '@eslint/js';
+import stylistic from '@stylistic/eslint-plugin';
 import globals from 'globals';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
+import { spacingRules } from './lint/spacing.js';
 
 const NODE = [
   'src/main/**/*.ts',
@@ -32,6 +34,13 @@ export default tseslint.config(
   // Inline disable comments are ignored: a gate the code can switch off is not a gate.
   { name: 'quality/no-inline-config', linterOptions: { noInlineConfig: true } },
   { name: 'js/recommended', files: SOURCE, ...js.configs.recommended },
+  // G03 readable spacing: autofixable, so `npm run lint -- --fix` clears it.
+  {
+    name: 'quality/spacing',
+    files: SOURCE,
+    plugins: { '@stylistic': stylistic },
+    rules: spacingRules,
+  },
 
   // Main process, preload and shared: Node, tsconfig.node.json.
   ...typed(
