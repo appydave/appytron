@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { promises as fs } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { tmpdir } from 'node:os';
+import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { classify } from '../src/lib/classify';
 import { CREATE_IF_ABSENT, GATE_DEV_DEPS, GATE_SCRIPTS } from '../src/lib/gate-manifest';
@@ -22,10 +23,10 @@ const APP_OWN_DEV_DEPS = [
 const APP_OWN_FILES = ['README.md', 'package-lock.json', '.github/pull_request_template.md'];
 
 /** Files at the template root, plus everything (recursively) under lint/ and .github/. */
-async function gateSurface(): Promise<string[]> {
+async function gateSurface(root = TEMPLATE): Promise<string[]> {
   const out: string[] = [];
   const walk = async (rel: string): Promise<void> => {
-    for (const e of await fs.readdir(resolve(TEMPLATE, rel), { withFileTypes: true })) {
+    for (const e of await fs.readdir(resolve(root, rel), { withFileTypes: true })) {
       const path = rel === '' ? e.name : `${rel}/${e.name}`;
       if (e.isDirectory()) {
         if (rel !== '' || path === 'lint' || path === '.github') await walk(path);
@@ -70,14 +71,28 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
     expect(unregistered).toEqual([]);
   });
 
-  it('the drift guard sees a new file nested under .github/workflows/', async () => {
-    const planted = resolve(TEMPLATE, '.github/workflows/new-gate.yml');
-    await fs.writeFile(planted, 'name: planted\n');
+  it.each([
+    '.github/workflows/new-gate.yml',
+    '.github/workflows/sub/b.yml',
+    'lint/sub/y.cjs',
+  ])('the drift guard sees a new file at %s', async (rel) => {
+    // Planted in a scratch copy, never in the real template: other test files read it in parallel.
+    const root = await fs.mkdtemp(join(tmpdir(), 'appytron-guard-'));
     try {
-      expect(await gateSurface()).toContain('.github/workflows/new-gate.yml');
+      await fs.cp(TEMPLATE, root, { recursive: true, filter: (src) => !src.includes('node_modules') });
+      expect(await gateSurface(root)).not.toContain(rel);
+      await fs.mkdir(dirname(resolve(root, rel)), { recursive: true });
+      await fs.writeFile(resolve(root, rel), 'planted\n');
+      expect(await gateSurface(root)).toContain(rel);
     } finally {
-      await fs.rm(planted);
+      await fs.rm(root, { recursive: true, force: true });
     }
+  });
+
+  it('.prettierignore anchors .claude to the template root, so a nested src/.claude is checked', async () => {
+    const lines = (await fs.readFile(resolve(TEMPLATE, '.prettierignore'), 'utf8')).split('\n');
+    expect(lines).toContain('/.claude');
+    expect(lines).not.toContain('.claude');
   });
 
   it('every command in a create-if-absent onWrite row is a script the template has', async () => {

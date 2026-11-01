@@ -111,8 +111,10 @@ describe('runUpgrade: package.json merge, UPGRADE_TODO.md, .gitignore create-if-
     const first = await runUpgrade(TEMPLATE, app);
     const rows = first.todo.filter((r) => r.startsWith(`- ${ci}: written`));
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toContain('npm run lint -- --fix');
-    expect(rows[0]).toContain('npm run format');
+    const at = (cmd: string): number => (rows[0] as string).indexOf(`\`${cmd}\``);
+    const order = ['npm run lint -- --fix', 'npm run format', 'npm run lint', 'npm run format:check'].map(at);
+    expect(order.every((i) => i >= 0)).toBe(true); // all four present (closing backtick: `format` is a prefix of `format:check`)
+    expect(order).toEqual([...order].sort((a, b) => a - b)); // lint --fix, then format, then the two checks
     expect(await fs.readFile(join(app, 'UPGRADE_TODO.md'), 'utf8')).toContain(rows[0]);
     expect((await runUpgrade(TEMPLATE, app)).todo.filter((r) => r.startsWith(`- ${ci}:`))).toEqual([]);
     const todo = await fs.readFile(join(app, 'UPGRADE_TODO.md'), 'utf8');
