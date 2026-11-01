@@ -30,9 +30,13 @@ function oxlintRun(source: string): { failed: boolean; output: string } {
 
   writeFileSync(join(dir, 'probe.ts'), source);
 
-  const run = spawnSync(oxlint, ['--deny-warnings', '-c', join(root, '.oxlintrc.json'), dir], {
-    encoding: 'utf8',
-  });
+  const run = spawnSync(
+    oxlint,
+    ['--deny-warnings', '--format=default', '-c', join(root, '.oxlintrc.json'), dir],
+    {
+      encoding: 'utf8',
+    }
+  );
 
   return { failed: run.status !== 0, output: run.stdout };
 }
