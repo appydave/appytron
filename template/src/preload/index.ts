@@ -20,5 +20,6 @@ if (process.contextIsolated) {
   }
 } else {
   // Fallback for the (non-default) case where contextIsolation is off.
-  (globalThis as unknown as { window: { appytron: AppytronApi } }).window.appytron = api;
+  // With contextIsolation off the preload shares the page's global, so globalThis is window.
+  Reflect.set(globalThis, 'appytron', api);
 }
