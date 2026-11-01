@@ -22,8 +22,10 @@ const AUTO = new Set([
   'src/preload/index.ts',
   'src/preload/index.d.ts',
   // Gate-owned files (ladder). Each later gate adds its own here in the same PR (or to CREATE_IF_ABSENT when an app may already have one). test/gate-guard.test.ts fails when a file at the template root, under lint/ or under .github/ is none of: auto, create-if-absent, or named in its APP_OWN_FILES. Files elsewhere (src/, test/) are not checked.
-  // Not yet shipped by the template, so not listed: .oxlintrc.json, .jscpd.json, .dependency-cruiser.cjs.
+  // Not yet shipped by the template, so not listed: .jscpd.json, .dependency-cruiser.cjs.
   'eslint.config.js',
+  // eslint.config.js reads it to switch off the rules Oxlint owns, so the two travel together.
+  '.oxlintrc.json',
 ]);
 
 /**

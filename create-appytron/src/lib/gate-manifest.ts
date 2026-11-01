@@ -9,9 +9,11 @@ export const GATE_DEV_DEPS = [
   '@eslint/js',
   '@stylistic/eslint-plugin',
   'eslint',
+  'eslint-plugin-oxlint',
   'eslint-plugin-react',
   'eslint-plugin-react-hooks',
   'globals',
+  'oxlint',
   'prettier',
   'typescript-eslint',
 ] as const;
@@ -32,6 +34,6 @@ export const CREATE_IF_ABSENT: readonly { from: string; to: string; hint?: strin
     hint: 'the lint, format check, typecheck, test and build steps',
     // Order matters: `lint --fix` re-spaces code that `format` then re-wraps; format first leaves files prettier-dirty.
     onWrite:
-      'the new CI runs lint and format:check, which fail until your code meets them: run `npm run lint -- --fix`, then `npm run format`, then `npm run lint` and `npm run format:check`; fix anything left by hand before you push.',
+      'the new CI runs lint and format:check, which fail until your code meets them. Oxlint runs first and stops the lint script, so clear its findings by hand before anything else (a type assertion `as X` becomes a real check or a type guard; no `any`; no `!`). Then run `npm run lint -- --fix`, then `npm run format`, then `npm run lint` and `npm run format:check`; fix anything left by hand before you push.',
   },
 ];

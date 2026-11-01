@@ -19,7 +19,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "lint": "eslint .",
+    "lint": "node lint/no-disable-directives.js && oxlint --deny-warnings --format=default && eslint . --max-warnings 0",
     "format:check": "prettier --check ."
   },
   "dependencies": {
@@ -40,9 +40,11 @@
     "electron-builder": "^26.18.0",
     "electron-vite": "^5.0.0",
     "eslint": "^9.39.5",
+    "eslint-plugin-oxlint": "^1.90.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.14.0",
+    "oxlint": "^1.90.0",
     "prettier": "^3.9.10",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

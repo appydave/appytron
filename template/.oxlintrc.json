@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react"],
+  "ignorePatterns": ["**/out/**", "**/dist/**", "**/coverage/**", "**/node_modules/**"],
+  "rules": {
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/consistent-type-assertions": ["error", { "assertionStyle": "never" }]
+  },
+  "overrides": [
+    {
+      // The one assertion the template keeps: the IPC boundary hands the handler `raw` (unknown) and
+      // the Zod schema (or none) decides its type, so `as In` is irreducible without changing
+      // register's public signature (apps call it with a typed In and no schema). Exact path, this
+      // rule only; test/oxlint-gate.test.ts pins the list to this file and no other.
+      "files": ["src/main/ipc-router.ts"],
+      "rules": { "typescript/consistent-type-assertions": "off" }
+    }
+  ]
+}

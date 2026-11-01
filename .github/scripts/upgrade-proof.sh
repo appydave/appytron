@@ -38,16 +38,27 @@ grep -q 'npm run lint -- --fix' UPGRADE_TODO.md || { echo "upgrade wrote ci.yml 
 
 echo "== install, then lint / typecheck / build"
 npm install --no-audit --no-fund
-set +e
-npm run lint > "${WORK}/lint.out" 2>&1
-LINT=$?
-set -e
-tail -n 15 "${WORK}/lint.out"
-# exit 1 = findings in the old app's code (reported); a load failure is exit 2 or a missing module
-if grep -Eq "Cannot find module|ERR_MODULE_NOT_FOUND|Missing script|Oops! Something went wrong|ConfigError" "${WORK}/lint.out" || [ "${LINT}" -gt 1 ]; then
-  echo "lint did not load and run (exit ${LINT})"; exit 1
-fi
-echo "lint ran (exit ${LINT}); findings: $(grep -Ec '^\s+[0-9]+:[0-9]+\s' "${WORK}/lint.out" || true)"
+LOAD_ERRORS="Cannot find module|ERR_MODULE_NOT_FOUND|Missing script|Oops! Something went wrong|ConfigError|Failed to parse oxlint config"
+# Oxlint runs first in `lint`, and every 0.2.0 app carries a cast in main.tsx, so `npm run lint` stops
+# there and never reaches ESLint. Run both halves on their own: each must LOAD (exit 0 or 1 = findings
+# in the old app's code, reported; anything else, or a load error in the output, fails the proof).
+check_loads() {
+  local name="$1" out="${WORK}/${1}.out" code
+  shift
+  set +e
+  "$@" > "${out}" 2>&1
+  code=$?
+  set -e
+  tail -n 8 "${out}"
+  if grep -Eq "${LOAD_ERRORS}" "${out}" || [ "${code}" -gt 1 ]; then
+    echo "${name} did not load and run (exit ${code})"; exit 1
+  fi
+  echo "${name} ran (exit ${code})"
+}
+check_loads lint npm run lint
+check_loads eslint npx eslint . --max-warnings 0
+# Oxlint ends with `Found N warnings and M errors.`; ESLint prints `  line:col  error  ...` per finding.
+echo "findings: oxlint $(grep -Eo 'Found [0-9]+ warnings? and [0-9]+ errors?' "${WORK}/lint.out" | tail -n 1 || true), eslint $(grep -Ec '^\s+[0-9]+:[0-9]+\s+(error|warning)' "${WORK}/eslint.out" || true)"
 npm run typecheck
 npm run build
 echo "upgrade proof passed"

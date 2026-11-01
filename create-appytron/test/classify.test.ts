@@ -12,6 +12,9 @@ describe('classify', () => {
       'src/main/file-author.ts',
       'src/main/updater.ts',
       'src/preload/index.ts',
+      'eslint.config.js',
+      '.oxlintrc.json',
+      'lint/no-disable-directives.js',
     ]) {
       expect(classify(p)).toBe('auto');
     }

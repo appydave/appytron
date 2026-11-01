@@ -3,7 +3,9 @@ import stylistic from '@stylistic/eslint-plugin';
 import globals from 'globals';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+import oxlint from 'eslint-plugin-oxlint';
 import tseslint from 'typescript-eslint';
+import { fileURLToPath } from 'node:url';
 import { spacingRules } from './lint/spacing.js';
 
 const NODE = [
@@ -83,5 +85,15 @@ export default tseslint.config(
     name: 'env/tests',
     files: ['test/**/*.ts', 'vitest.config.ts'],
     languageOptions: { globals: { ...globals.node, ...globals.vitest } },
-  }
+  },
+
+  // Config and gate scripts run in Node, outside every tsconfig.
+  {
+    name: 'env/node-scripts',
+    files: ['eslint.config.js', 'lint/**/*.js'],
+    languageOptions: { globals: globals.node },
+  },
+
+  // Last: switch off in ESLint every rule .oxlintrc.json turns on, so each rule has one owner.
+  ...oxlint.buildFromOxlintConfigFile(fileURLToPath(new URL('./.oxlintrc.json', import.meta.url)))
 );
