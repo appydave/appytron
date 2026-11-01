@@ -123,8 +123,15 @@ describe('G02 Oxlint allowlist: one file may cast, nothing else', () => {
         'typescript/no-explicit-any': 'error',
         'typescript/no-non-null-assertion': 'error',
         'typescript/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
+        'no-magic-numbers': [
+          'error',
+          { ignore: [-1, 0, 1, 2], detectObjects: false, ignoreDefaultValues: true },
+        ],
       },
-      overrides: [{ files: [EXEMPT], rules: { 'typescript/consistent-type-assertions': 'off' } }],
+      overrides: [
+        { files: ['test/**'], rules: { 'no-magic-numbers': 'off' } },
+        { files: [EXEMPT], rules: { 'typescript/consistent-type-assertions': 'off' } },
+      ],
     });
   });
 
@@ -149,6 +156,52 @@ describe('G02 Oxlint allowlist: one file may cast, nothing else', () => {
     expect(
       oxlintAt(EXEMPT, 'declare const v: string | null;\nexport const s = v!;\n').output
     ).toContain('no-non-null-assertion');
+  });
+});
+
+describe('G05 no-magic-numbers, run through the real .oxlintrc.json', () => {
+  const SRC = 'src/main/probe.ts';
+
+  it.each([
+    ['a bare number as an argument', 'declare function f(n: number): void;\nf(1200);\n'],
+    ['a decimal', 'declare function f(n: number): void;\nf(3.14);\n'],
+    ['arithmetic', 'export const t = (x: number): number => x * 60;\n'],
+    ['a class property', 'export class K {\n  size = 42;\n}\n'],
+    ['an array element', 'export const a = [9];\n'],
+    ['a nullish fallback', 'export const w = (o: { w?: number }): number => o.w ?? 1200;\n'],
+    ['a number just past the ignore list', 'declare function f(n: number): void;\nf(3);\n'],
+  ])('fails %s and tells the agent to use a named constant', (_name, source) => {
+    const { failed, output } = oxlintAt(SRC, source);
+
+    expect(failed).toBe(true);
+    expect(output).toContain('no-magic-numbers');
+    expect(output).toContain('named constant');
+  });
+
+  it.each([
+    ['a named constant', 'export const WIDTH = 1200;\n'],
+    ['a default parameter (ignoreDefaultValues)', 'export const f = (x = 500): number => x;\n'],
+    ['an object literal value (detectObjects off)', 'export const o = { port: 7 };\n'],
+    [
+      'the ignore list -1, 0, 1, 2',
+      'declare function f(n: number): void;\nf(-1);\nf(0);\nf(1);\nf(2);\n',
+    ],
+  ])('allows %s', (_name, source) => {
+    expect(oxlintAt(SRC, source).failed).toBe(false);
+  });
+
+  it('is out of scope in test/ and in scope in src/ and the other environments', () => {
+    const bad = 'declare function f(n: number): void;\nf(1200);\n';
+
+    expect(oxlintAt('test/probe.test.ts', bad).failed).toBe(false);
+
+    for (const file of ['src/renderer/src/probe.tsx', 'src/preload/probe.ts', 'test-utils/p.ts']) {
+      expect(oxlintAt(file, bad).failed).toBe(true);
+    }
+  });
+
+  it('fails in the exempt cast file too: the exemption is for assertions only', () => {
+    expect(oxlintAt(EXEMPT, 'declare function f(n: number): void;\nf(1200);\n').failed).toBe(true);
   });
 });
 
