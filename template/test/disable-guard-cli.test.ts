@@ -102,4 +102,36 @@ describe('A3 disable-directive guard, run as a command', () => {
 
     expect(run(root).status).toBe(0);
   });
+
+  // AF3 (audit G19, G18b): the guard exports findDisableDirectives for tests. Importing it must not run the CLI,
+  // and must not throw when there is no script path (node -e, a REPL).
+  it('does nothing when imported from an inline script (no argv[1]), even over a planted directive', () => {
+    const root = layout();
+
+    plant(root, 'test/x.ts');
+
+    const { status, stderr } = spawnSync(
+      'node',
+      [
+        '--input-type=module',
+        '-e',
+        `import(${JSON.stringify(join(root, 'lint', 'no-disable-directives.js'))})`,
+      ],
+      { encoding: 'utf8' }
+    );
+
+    expect({ status, stderr }).toEqual({ status: 0, stderr: '' });
+  });
+
+  it('does nothing when imported by another script, even over a planted directive', () => {
+    const root = layout();
+    const entry = join(root, 'importer.mjs');
+
+    plant(root, 'test/x.ts');
+    writeFileSync(entry, `import './lint/no-disable-directives.js';\n`);
+
+    const { status, stderr } = spawnSync('node', [entry], { encoding: 'utf8' });
+
+    expect({ status, stderr }).toEqual({ status: 0, stderr: '' });
+  });
 });

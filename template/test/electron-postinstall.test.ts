@@ -20,40 +20,66 @@ afterEach(() => {
   }
 });
 
-// A scratch app whose `electron` package only drops a marker when it is required.
-function runPostinstall(env: Record<string, string>): boolean {
+// A scratch app whose `electron` package drops a marker when it is required, and throws like a failed download when asked to.
+function runPostinstall(
+  env: Record<string, string>,
+  electronThrows = false
+): { required: boolean; status: number | null; stderr: string } {
   const dir = mkdtempSync(join(tmpdir(), 'e1-'));
 
   scratch.push(dir);
   mkdirSync(join(dir, 'node_modules', 'electron'), { recursive: true });
   writeFileSync(
     join(dir, 'node_modules', 'electron', 'index.js'),
-    `require('fs').writeFileSync(${JSON.stringify(join(dir, 'required'))}, '');\nmodule.exports = '';\n`
+    `require('fs').writeFileSync(${JSON.stringify(join(dir, 'required'))}, '');\n` +
+      (electronThrows
+        ? `throw new Error('Electron failed to install correctly');\n`
+        : `module.exports = '';\n`)
   );
 
   const run = spawnSync(pkg.scripts.postinstall ?? 'exit 1', {
     cwd: dir,
     shell: true,
     env: { PATH: process.env.PATH ?? '', ...env },
+    encoding: 'utf8',
   });
 
-  expect(run.status).toBe(0);
-
-  return existsSync(join(dir, 'required'));
+  return { required: existsSync(join(dir, 'required')), status: run.status, stderr: run.stderr };
 }
 
 describe('E1 postinstall fetches the Electron binary', () => {
   it('requires electron on a plain install, so the binary is downloaded', () => {
-    expect(runPostinstall({})).toBe(true);
+    const run = runPostinstall({});
+
+    expect(run.required).toBe(true);
+    expect(run.status).toBe(0);
   });
 
   it('leaves electron alone when ELECTRON_SKIP_BINARY_DOWNLOAD is set, so CI stays fast', () => {
-    expect(runPostinstall({ ELECTRON_SKIP_BINARY_DOWNLOAD: '1' })).toBe(false);
+    const run = runPostinstall({ ELECTRON_SKIP_BINARY_DOWNLOAD: '1' });
+
+    expect(run.required).toBe(false);
+    expect(run.status).toBe(0);
+  });
+
+  it('a failed download still fails the install, and the message names the skip variable', () => {
+    const run = runPostinstall({}, true);
+
+    expect(run.status).not.toBe(0);
+    expect(run.stderr).toContain('ELECTRON_SKIP_BINARY_DOWNLOAD=1');
+    expect(run.stderr).toContain('Electron failed to install correctly');
+  });
+
+  it('prints no hint when the download is skipped', () => {
+    const run = runPostinstall({ ELECTRON_SKIP_BINARY_DOWNLOAD: '1' }, true);
+
+    expect(run.status).toBe(0);
+    expect(run.stderr).toBe('');
   });
 
   it('is the exact reviewed command', () => {
     expect(pkg.scripts.postinstall).toBe(
-      `node -e "process.env.ELECTRON_SKIP_BINARY_DOWNLOAD || require('electron')"`
+      `node -e "if (!process.env.ELECTRON_SKIP_BINARY_DOWNLOAD) { try { require('electron') } catch (e) { console.error('appytron: the Electron binary download failed. On CI, or offline, set ELECTRON_SKIP_BINARY_DOWNLOAD=1 to skip it.'); throw e } }"`
     );
   });
 });

@@ -125,7 +125,12 @@ describe('G02 Oxlint allowlist: one file may cast, nothing else', () => {
         'typescript/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
         'no-magic-numbers': [
           'error',
-          { ignore: [-1, 0, 1, 2], detectObjects: false, ignoreDefaultValues: true },
+          {
+            ignore: [-1, 0, 1, 2],
+            detectObjects: false,
+            ignoreDefaultValues: true,
+            ignoreNumericLiteralTypes: true,
+          },
         ],
       },
       overrides: [
@@ -170,6 +175,14 @@ describe('G05 no-magic-numbers, run through the real .oxlintrc.json', () => {
     ['an array element', 'export const a = [9];\n'],
     ['a nullish fallback', 'export const w = (o: { w?: number }): number => o.w ?? 1200;\n'],
     ['a number just past the ignore list', 'declare function f(n: number): void;\nf(3);\n'],
+    [
+      'a number used in code beside a literal type',
+      'export type T = 42;\ndeclare function f(n: number): void;\nf(42);\n',
+    ],
+    [
+      'a number in an expression (the type allowance does not leak)',
+      'declare const y: number;\nexport const x = 42 * y;\n',
+    ],
   ])('fails %s and tells the agent to use a named constant', (_name, source) => {
     const { failed, output } = oxlintAt(SRC, source);
 
@@ -181,6 +194,8 @@ describe('G05 no-magic-numbers, run through the real .oxlintrc.json', () => {
   it.each([
     ['a named constant', 'export const WIDTH = 1200;\n'],
     ['a default parameter (ignoreDefaultValues)', 'export const f = (x = 500): number => x;\n'],
+    ['a numeric literal type (ignoreNumericLiteralTypes)', 'export type T = 42;\n'],
+    ['a union of numeric literal types', 'export type Status = 200 | 404;\n'],
     ['an object literal value (detectObjects off)', 'export const o = { port: 7 };\n'],
     [
       'the ignore list -1, 0, 1, 2',

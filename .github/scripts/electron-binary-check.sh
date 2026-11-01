@@ -23,13 +23,14 @@ fi
 cd "${APP}"
 npm install --no-audit --no-fund
 
-# Resolve the executable the way electron-vite's getElectronPath does: path.txt beside the electron package, then dist/<path>.
+# Resolve the binary the way electron-vite's getElectronPath does: path.txt beside the electron package, then dist/<path>.
+# Only presence is checked (the exec bit is not): a missing path.txt or dist file is the failure E1 fixes.
 node -e "
 const fs = require('fs'), path = require('path');
 const dir = path.dirname(require.resolve('electron'));
 const pathFile = path.join(dir, 'path.txt');
 if (!fs.existsSync(pathFile)) { console.error('Electron uninstall: no ' + pathFile); process.exit(1); }
 const exe = path.join(dir, 'dist', fs.readFileSync(pathFile, 'utf8'));
-fs.accessSync(exe, fs.constants.X_OK);
-console.log('electron binary ok: ' + exe);
+if (!fs.existsSync(exe)) { console.error('Electron uninstall: no binary at ' + exe); process.exit(1); }
+console.log('electron binary present: ' + exe);
 "

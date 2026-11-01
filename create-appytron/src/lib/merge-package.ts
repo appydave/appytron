@@ -1,4 +1,4 @@
-import { GATE_DEV_DEPS, GATE_SCRIPTS } from './gate-manifest.js';
+import { ADDED_ENTRY_NOTES, GATE_DEV_DEPS, GATE_SCRIPTS } from './gate-manifest.js';
 
 type Section = 'scripts' | 'devDependencies';
 type Dict = Record<string, string>;
@@ -31,9 +31,11 @@ function mergeSection(
     if (current === undefined) {
       next[name] = wanted;
       out.added.push(`${section}.${name}`);
+      const note = ADDED_ENTRY_NOTES[`${section}.${name}`];
+      if (note !== undefined) out.todo.push(`- package.json ${section}.${name}: ${note}`);
     } else if (current !== wanted) {
       out.todo.push(
-        `- package.json ${section}.${name}: yours "${current}", framework "${wanted}". Not changed; update it if you want the gate to run as shipped.`,
+        `- package.json ${section}.${name}: yours "${current}", framework "${wanted}". Not changed; update it if you want it to run as shipped.`,
       );
     }
   }

@@ -16,6 +16,7 @@ copies it to make a new app.
 
 ```bash
 npm install      # installs Electron + links @appydave/core
+                 # (also downloads the Electron binary; on CI or offline set ELECTRON_SKIP_BINARY_DOWNLOAD=1 to skip it)
 npm run dev      # opens a window; shows app info + a typed IPC round-trip
 npm run typecheck
 npm run build
