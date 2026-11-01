@@ -132,6 +132,7 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
   it.each([
     'Complexity limits are fixed the same way: a function over cyclomatic 6 (Oxlint `complexity`), cognitive 8 or an expression with more than 3 boolean operators (SonarJS) is split by hand, never suppressed.',
     'Duplicates are fixed the same way: `npm run dup` fails on a block of more than 5 lines and 50 tokens repeated in source, or in tests (judged apart); extract the shared code into one function or helper.',
+    'Parent-relative imports are fixed by alias: a `../` specifier fails lint; write `@shared/x` (src/shared), `@main/x`, `@preload/x`, `@lint/x` or `@root/x` in tests, `@/x` in the renderer. This upgrade replaced electron.vite.config.ts and vitest.config.ts, so re-add any alias of your own there.',
   ])('the ci.yml onWrite row says: %s', (sentence) => {
     const row = CREATE_IF_ABSENT.find((c) => c.to === '.github/workflows/ci.yml')?.onWrite;
     expect(row).toContain(sentence);
