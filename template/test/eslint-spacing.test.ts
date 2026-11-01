@@ -57,6 +57,48 @@ describe('G03 readable spacing gate, run through the real eslint.config.js', () 
     });
   });
 
+  // A2/F4: one row per padding sub-rule and the brace-style single-line option.
+  describe.each([
+    [
+      'brace-style rejects a single-line block',
+      '@stylistic/brace-style',
+      'if (flag) { go(); }\n',
+      'if (flag) {\n  go();\n}\n',
+    ],
+    [
+      'import padding',
+      PADDING,
+      "import { a } from 'a';\nexport const c = a;\n",
+      "import { a } from 'a';\n\nexport const c = a;\n",
+    ],
+    [
+      'padding around a function',
+      PADDING,
+      'go();\nfunction h(): void {\n  stop();\n}\n',
+      'go();\n\nfunction h(): void {\n  stop();\n}\n',
+    ],
+    ['padding around a class', PADDING, 'go();\nclass K {}\n', 'go();\n\nclass K {}\n'],
+    ['padding after a class', PADDING, 'class K {}\ngo();\n', 'class K {}\n\ngo();\n'],
+    [
+      'padding before a return after a call',
+      PADDING,
+      'export function f(): number {\n  go();\n  return 1;\n}\n',
+      'export function f(): number {\n  go();\n\n  return 1;\n}\n',
+    ],
+    ['padding before a declaration', PADDING, 'go();\nconst a = 1;\n', 'go();\n\nconst a = 1;\n'],
+  ])('%s', (_name, rule, bad, good) => {
+    const head =
+      'declare const flag: boolean;\ndeclare function go(): void;\ndeclare function stop(): void;\n\n';
+
+    it('fails the bad snippet', async () => {
+      expect(await errors(head + bad)).toContain(rule);
+    });
+
+    it('passes the fixed snippet', async () => {
+      expect(await errors(head + good)).not.toContain(rule);
+    });
+  });
+
   it('wants a blank line before return and after a block', async () => {
     expect(
       await errors('export function f(a: number) {\n  const b = a;\n  return b;\n}\n')
