@@ -44,6 +44,7 @@ async function ids(source: string, file: string): Promise<string[]> {
 describe('one definition of test code', () => {
   it('is imported by eslint.config.js, not copied into it', () => {
     const config = readFileSync(resolve(root, 'eslint.config.js'), 'utf8');
+
     expect(config).toMatch(/import\s*\{\s*TEST_FILES\s*\}\s*from\s*'\.\/lint\/test-scope\.js'/);
     expect(config).not.toContain("'**/*.test.*'");
   });
