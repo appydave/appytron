@@ -17,7 +17,7 @@ const PRELOAD = 'src/preload/index.ts';
 const RENDERER = 'src/renderer/src/App.tsx';
 const SCRIPT = 'lint/spacing.js';
 const ROOT_CONFIG = 'eslint.config.js';
-const TEST = 'test/oxlint-gate.test.ts';
+const TEST = 'test/gates/oxlint-gate.test.ts';
 const VITEST_CONFIG = 'vitest.config.ts';
 
 async function count(rule: string, source: string, file = MAIN): Promise<number> {

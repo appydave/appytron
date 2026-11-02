@@ -10,6 +10,8 @@ import { oxlintAt } from './helpers/oxlint-probe';
 const TEST_CODE = [
   'test/probe.test.js',
   'test/helper.js',
+  'test/gates/probe.test.js',
+  'test/gates/helpers/x.js',
   'src/x.test.js',
   'src/a/test/y.js',
   'src/main/probe.test.mjs',

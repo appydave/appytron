@@ -254,7 +254,7 @@ describe('G11 the reviewed configuration', () => {
     });
   });
 
-  it('forbids a circular import, following no node_modules (the boundary rules beside it: test/boundaries-config.test.ts)', () => {
+  it('forbids a circular import, following no node_modules (the boundary rules beside it: test/gates/boundaries-config.test.ts)', () => {
     const config = createRequire(import.meta.url)(join(root, '.dependency-cruiser.cjs'));
 
     expect(config.forbidden[0]).toEqual({

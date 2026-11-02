@@ -48,6 +48,8 @@ describe('npm run typecheck:tests', () => {
     ['a test file', 'test/planted.test.ts'],
     ['a nested helper', 'test/helpers/planted.ts'],
     ['a deeper folder', 'test/nested/deeper/planted.ts'],
+    ['a gate proof', 'test/gates/planted.test.ts'],
+    ['a gate helper', 'test/gates/helpers/planted.ts'],
   ])(
     'fails on a type error in %s',
     (_where, file) => {

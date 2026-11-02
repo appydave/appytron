@@ -11,7 +11,7 @@ const FILES = [
   'src/main/index.ts',
   'src/preload/index.ts',
   'src/renderer/src/App.tsx',
-  'test/eslint-size.test.ts',
+  'test/gates/eslint-size.test.ts',
   'vitest.config.ts',
 ];
 
@@ -109,7 +109,7 @@ describe('no parent-relative imports', () => {
     ],
     [
       'tests',
-      ['test/eslint-size.test.ts', 'test/helpers/scratch.ts'],
+      ['test/gates/eslint-size.test.ts', 'test/gates/helpers/scratch.ts'],
       `No '../' imports: use a root alias. @shared/* is src/shared, @main/* is src/main, @preload/* is src/preload, @lint/* is lint, @root/* is the project root. ${SAME}`,
     ],
     ['root configs and lint/', ['vitest.config.ts', 'eslint.config.js', 'lint/probe.js'], NONE],

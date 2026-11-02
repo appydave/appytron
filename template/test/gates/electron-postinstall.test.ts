@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 // calling require('electron'), so a fresh app has no binary and `npm start` dies with "Electron uninstall".
 // The template's postinstall requires electron (which downloads it) unless ELECTRON_SKIP_BINARY_DOWNLOAD is set.
 // CI proves the real download in .github/scripts/electron-binary-check.sh; this runs the real script string offline.
-const root = resolve(import.meta.dirname, '..');
+const root = resolve(import.meta.dirname, '..', '..');
 const pkg: { scripts: Record<string, string> } = JSON.parse(
   readFileSync(join(root, 'package.json'), 'utf8')
 );

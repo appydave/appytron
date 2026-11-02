@@ -11,7 +11,7 @@ const TEMPLATE = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 't
 /** The app's own scripts and devDependencies. Anything in the template's package.json not named here must be in the gate list. */
 const APP_OWN_SCRIPTS = [
   'dev', 'start', 'build', 'package', 'release:mac', 'typecheck:node', 'typecheck:web',
-  'typecheck', 'test', 'test:watch', 'format',
+  'typecheck', 'test', 'test:gates', 'test:all', 'test:watch', 'format',
 ];
 const APP_OWN_DEV_DEPS = [
   '@tailwindcss/vite', '@types/node', '@types/react', '@types/react-dom', '@vitejs/plugin-react',

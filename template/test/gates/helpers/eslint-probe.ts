@@ -3,7 +3,7 @@ import { ESLint, type Linter } from 'eslint';
 
 // The one place the ESLint probe tests build their linter, so the CI workaround and the severity
 // filter live once. A probe runs the real eslint.config.js over text, so it proves the gate is wired.
-export const root = resolve(import.meta.dirname, '..', '..');
+export const root = resolve(import.meta.dirname, '..', '..', '..');
 export const ERROR = 2;
 
 // With CI set, typescript-eslint assumes a one-shot run and reads each file from disk, ignoring the

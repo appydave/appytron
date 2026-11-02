@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 // AF3: eslint-plugin-oxlint declares the one oxlint minor it works with as a peer (~1.90.0). A caret on oxlint
 // lets npm pick a newer minor than the plugin accepts, and a fresh `npm install` of a new app dies with ERESOLVE
 // (AppyStack 0.5.0 did exactly this). The two ranges must stay equal; bump both together.
-const root = resolve(import.meta.dirname, '..');
+const root = resolve(import.meta.dirname, '..', '..');
 const read = (
   path: string
 ): {

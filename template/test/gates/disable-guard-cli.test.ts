@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 // A3: the guard's command line, as `npm run lint` runs it. findDisableDirectives() is tested in
 // oxlint-gate.test.ts; this proves the script exits 1, reads the template root and tells the reader what to do.
-const guard = resolve(import.meta.dirname, '..', 'lint', 'no-disable-directives.js');
+const guard = resolve(import.meta.dirname, '..', '..', 'lint', 'no-disable-directives.js');
 // Built from pieces so this file does not trip the guard it tests.
 const DIRECTIVE = '@ts' + '-nocheck';
 const scratch: string[] = [];

@@ -38,6 +38,7 @@ jobs:
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm test
+      - run: npm run test:gates
       - run: npm run build
 
   # Runs the template's checks on a freshly scaffolded app, not on template/ in place.

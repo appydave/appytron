@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
-const root = resolve(import.meta.dirname, '..', '..');
+const root = resolve(import.meta.dirname, '..', '..', '..');
 const oxlint = resolve(root, 'node_modules/.bin/oxlint');
 
 /**

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 // AF3 (audit P1): the shipped CI skips the Electron binary download. Without this line every generated
 // app's CI downloads ~100 MB per run and nothing fails, so the line is pinned here.
-const root = resolve(import.meta.dirname, '..');
+const root = resolve(import.meta.dirname, '..', '..');
 const ci = readFileSync(join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
 
 describe('template ci.yml skips the Electron binary download', () => {
