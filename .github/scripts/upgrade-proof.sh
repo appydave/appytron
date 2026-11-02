@@ -72,6 +72,12 @@ printf "\nimport '@main/ipc-router';\n" >> src/renderer/src/main.tsx
 if ${BOUNDARIES} > "${WORK}/boundaries.out" 2>&1; then echo "a renderer import of main did not fail the boundary rules"; exit 1; fi
 grep -q "error renderer-imports-main-or-preload: src/renderer/src/main.tsx" "${WORK}/boundaries.out" || { echo "boundary failure did not name the rule"; exit 1; }
 sed -i.bak '$d' src/renderer/src/main.tsx && rm src/renderer/src/main.tsx.bak
+# G16: the no-re-export rule reached the upgraded app: a barrel fails ESLint, naming the rule.
+test -f lint/exports.js || { echo "upgrade did not bring lint/exports.js"; exit 1; }
+printf "export * from './App';\n" > src/renderer/src/plant-barrel.ts
+if npx eslint src/renderer/src/plant-barrel.ts --max-warnings 0 > "${WORK}/barrel.out" 2>&1; then echo "a barrel did not fail lint"; exit 1; fi
+grep -q "exports/no-reexport" "${WORK}/barrel.out" || { echo "barrel failure did not name exports/no-reexport"; exit 1; }
+rm src/renderer/src/plant-barrel.ts
 # Oxlint ends with `Found N warnings and M errors.`; ESLint prints `  line:col  error  ...` per finding.
 echo "findings: oxlint $(grep -Eo 'Found [0-9]+ warnings? and [0-9]+ errors?' "${WORK}/lint.out" | tail -n 1 || true), eslint $(grep -Ec '^\s+[0-9]+:[0-9]+\s+(error|warning)' "${WORK}/eslint.out" || true)"
 npm run typecheck

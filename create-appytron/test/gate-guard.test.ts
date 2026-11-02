@@ -172,6 +172,13 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
     }
   });
 
+  it('the no-re-export rule is gate-owned, and the note tells an app with barrel files what to fix', async () => {
+    await fs.access(resolve(TEMPLATE, 'lint/exports.js'));
+    expect(classify('lint/exports.js')).toBe('auto');
+    const onWrite = CREATE_IF_ABSENT.map((c) => c.onWrite ?? '').join('\n');
+    expect(onWrite).toContain('a barrel (`export * from`, `export { x } from`, or an import exported again) fails lint');
+  });
+
   it('the test type-check is registered: its script and tsconfig travel with an upgrade, and the note says how to wire it', async () => {
     expect(GATE_SCRIPTS).toContain('typecheck:tests');
     await fs.access(resolve(TEMPLATE, 'tsconfig.tests.json'));

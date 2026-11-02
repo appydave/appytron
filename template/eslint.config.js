@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { sizePlugin, sizeRules } from './lint/size.js';
 import { spacingRules } from './lint/spacing.js';
 import { rootImportConfigs } from './lint/root-imports.js';
+import { exportsPlugin, exportsRules } from './lint/exports.js';
 import { TEST_FILES } from './lint/test-scope.js';
 
 const COGNITIVE_MAX = 8;
@@ -61,6 +62,13 @@ export default tseslint.config(
   // G10 root imports: no '../' specifier anywhere (tests included). Listed with G04's member caps;
   // one block per folder, because the alias that fixes the import differs by folder.
   ...rootImportConfigs(sizeRules['no-restricted-syntax'].slice(1)),
+  // G16 no re-exports: a module exports only what it declares. Everywhere, tests and root configs included.
+  {
+    name: 'quality/exports',
+    files: SOURCE,
+    plugins: { exports: exportsPlugin },
+    rules: exportsRules,
+  },
   // Test files (TEST_FILES): lint/size.js reads this to exempt `describe` callbacks.
   { name: 'quality/test-scope', files: TEST_FILES, settings: { size: { testFile: true } } },
 
