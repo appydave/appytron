@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-const root = resolve(import.meta.dirname, '..', '..');
+const root = resolve(import.meta.dirname, '..', '..', '..');
 
 /** The template's package.json: what the gates pin. */
 export function manifest(): {

@@ -39,6 +39,10 @@ test -f knip.json && test -f .dependency-cruiser.cjs || { echo "upgrade did not 
 test -f tsconfig.boundaries.json || { echo "upgrade did not bring tsconfig.boundaries.json"; exit 1; }
 grep -q "'@main'" electron.vite.config.ts && grep -q "'@preload'" electron.vite.config.ts || { echo "upgrade did not bring the @main and @preload build aliases"; exit 1; }
 grep -q 'npm run lint -- --fix' UPGRADE_TODO.md || { echo "upgrade wrote ci.yml but left no fix row in UPGRADE_TODO.md"; exit 1; }
+# TS: the proofs are not carried, so the written ci.yml is the template's minus the one test:gates step, and says why.
+! grep -q 'test:gates' .github/workflows/ci.yml || { echo "the upgraded ci.yml still runs test:gates, a script the old app does not have"; exit 1; }
+diff <(grep -v '^      - run: npm run test:gates$' "${ROOT}/template/.github/workflows/ci.yml") .github/workflows/ci.yml || { echo "the upgraded ci.yml is not the template's minus the test:gates line"; exit 1; }
+grep -q 'gate proofs are not carried to upgraded apps, so CI has no test:gates step' UPGRADE_TODO.md || { echo "no UPGRADE_TODO row about the missing test:gates step"; exit 1; }
 
 echo "== install, then lint / typecheck / build"
 npm install --no-audit --no-fund

@@ -8,7 +8,7 @@ import { TEST_FILES } from '@lint/test-scope.js';
 import { findDisableDirectives } from '@lint/no-disable-directives.js';
 import { oxlintAt } from './helpers/oxlint-probe';
 
-const root = resolve(import.meta.dirname, '..');
+const root = resolve(import.meta.dirname, '..', '..');
 const oxlint = resolve(root, 'node_modules/.bin/oxlint');
 const scratch: string[] = [];
 

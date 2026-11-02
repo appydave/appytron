@@ -4,7 +4,7 @@
  * It always exits 1: it only runs after a failure.
  *
  * What the gate accepts, so a reader does not hunt for it (all named in knip.json, pinned whole by
- * test/deadcode-gate.test.ts): src/main/updater.ts and electron-updater (the auto-update wiring an app
+ * test/gates/deadcode-gate.test.ts): src/main/updater.ts and electron-updater (the auto-update wiring an app
  * switches on later), and src/main/file-author.ts, a framework primitive no production code calls yet.
  * `ignore` hides that file's own findings (its unused exports too) and nothing it imports. The plain Knip pass would
  * print a 'Remove from ignore' hint for file-author.ts (only the production pass needs it; following it fails that

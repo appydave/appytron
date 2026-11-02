@@ -5,7 +5,7 @@ import { errorRuleIds } from './helpers/eslint-probe';
 // Existing paths, because type-aware parsing needs a file a tsconfig includes; the text is the probe.
 const MAIN = 'src/main/index.ts';
 const RENDERER = 'src/renderer/src/App.tsx';
-const TEST = 'test/eslint-spacing.test.ts';
+const TEST = 'test/gates/eslint-spacing.test.ts';
 
 const errors = (source: string, file = MAIN) => errorRuleIds(source, file);
 

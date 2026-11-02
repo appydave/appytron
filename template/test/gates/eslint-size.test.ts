@@ -11,7 +11,7 @@ import { ERROR, errorRuleIds, lint, root } from './helpers/eslint-probe';
 const MAIN = 'src/main/index.ts';
 const PRELOAD = 'src/preload/index.ts';
 const RENDERER = 'src/renderer/src/App.tsx';
-const TEST = 'test/eslint-size.test.ts';
+const TEST = 'test/gates/eslint-size.test.ts';
 // Paths no tsconfig includes: plain JavaScript probes only.
 const PLAIN = 'lint/probe.ts';
 const FUNCTION_RULE = 'size/max-lines-per-function';

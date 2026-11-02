@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SLOW } from './helpers/deadcode';
-import { root } from './helpers/scratch';
+import { plainOutputEnv, root } from './helpers/scratch';
 
 // AF5 fix 1: a package linked from outside the project (`"@appydave/core": "file:../core"`, how some apps declare it)
 // resolves outside node_modules unless preserveSymlinks is on. The scratch project has real packages in vendor/ and
@@ -60,7 +60,7 @@ function cruise(preserveSymlinks: boolean): string {
         'err-long',
         'src/shared',
       ],
-      { cwd: dir, encoding: 'utf8' }
+      { cwd: dir, encoding: 'utf8', env: plainOutputEnv() }
     );
 
     return run.stdout + run.stderr;

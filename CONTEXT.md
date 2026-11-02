@@ -197,7 +197,7 @@ supplied when a Developer ID is available. Auto-update reads the GitHub-Releases
 **Verify the whole system is healthy:**
 ```
 cd ~/dev/ad/apps/appydave-foundation && bun run test          # 33
-cd ~/dev/ad/apps/appytron/template && npm test && npm run typecheck && npm run build
+cd ~/dev/ad/apps/appytron/template && npm test && npm run test:gates && npm run typecheck && npm run build
 cd ~/dev/ad/apps/appytron/create-appytron && npm test
 ```
 

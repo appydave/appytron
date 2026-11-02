@@ -31,6 +31,7 @@ cd "${APP}"
 npm install --no-audit --no-fund
 npm run typecheck
 npm test
+npm run test:gates
 npm run build
 npm run lint
 npm run dup

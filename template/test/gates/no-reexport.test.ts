@@ -11,7 +11,7 @@ const ALL_FILES = [
   'src/preload/index.ts',
   'src/renderer/src/App.tsx',
   'src/shared/ipc.ts',
-  'test/eslint-size.test.ts',
+  'test/gates/eslint-size.test.ts',
   'lint/probe.js',
   'vitest.config.ts',
 ];
