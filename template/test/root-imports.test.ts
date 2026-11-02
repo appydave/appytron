@@ -72,12 +72,15 @@ describe('no parent-relative imports', () => {
   });
 
   // AF6: the extensions TypeScript and JSX add are covered too (lint/plant.jsx is reached only by the fallback block).
-  it.each(['lint/plant.jsx', 'src/shared/plant.mts', 'test/plant.cts'])(
-    'rejects a parent import in %s',
-    async (file) => {
-      expect(await ruleCount("import { a } from '../a';\nexport const b = a;\n", file)).toBe(1);
-    }
-  );
+  it.each([
+    'lint/plant.jsx',
+    'lint/plant.cts',
+    'lint/plant.mts',
+    'src/shared/plant.mts',
+    'test/plant.cts',
+  ])('rejects a parent import in %s', async (file) => {
+    expect(await ruleCount("import { a } from '../a';\nexport const b = a;\n", file)).toBe(1);
+  });
 
   // The remedy must work where the file is: each folder names exactly the aliases that resolve there.
   // Pinned whole, so dropping one alias, the same-folder note or a folder's own line fails.

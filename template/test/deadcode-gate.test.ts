@@ -281,6 +281,17 @@ describe('G11 the reviewed configuration', () => {
     SLOW
   );
 
+  it('states in the limits list that .mts and .cts get no TypeScript parser, so TypeScript syntax in them fails to parse', () => {
+    const header = readFileSync(join(root, 'lint/deadcode-remedy.js'), 'utf8').replace(
+      /\s*\n \*\s*/g,
+      ' '
+    );
+
+    expect(header).toContain(
+      '.mts and .cts get only the generic ESLint block (no TypeScript parser), so TypeScript syntax in them is `Parsing error: Unexpected token :` and the strict rules never run: write .ts for TypeScript'
+    );
+  });
+
   it('runs the guard, Knip, Knip on production code, then depcruise over src and lint, and the remedy on failure', () => {
     expect(manifest().scripts.deadcode).toBe(
       'node lint/no-disable-directives.js && knip --no-config-hints && knip --production --exclude binaries && depcruise -c .dependency-cruiser.cjs --ts-config tsconfig.boundaries.json -T err-long src lint test vitest.config.ts eslint.config.js electron.vite.config.ts || node lint/deadcode-remedy.js'

@@ -23,7 +23,9 @@
  *    rejects it); ESLint does not refuse `@main` in the renderer (depcruise does).
  *  - src/main may not import src/preload, even for a type: put the shared type in src/shared.
  *  - `upgrade-proof.sh --break` stops at the first lint/ line it removes; CI is the pin for the rest.
- *  - Extensions: ESLint (every rule block) and the root-import rule cover .ts .tsx .mts .cts .js .jsx .mjs .cjs. Knip's
+ *  - Extensions: the glob names .ts .tsx .mts .cts .js .jsx .mjs .cjs, but .mts and .cts get only the generic ESLint
+ *    block (no TypeScript parser), so TypeScript syntax in them is `Parsing error: Unexpected token :` and the strict
+ *    rules never run: write .ts for TypeScript (the template has no .mts/.cts). Knip's
  *    root `project` glob is `*.{js,ts,cjs}` and is not widened (an .mjs, .mts or .cts file at the root is invisible to
  *    it); the jscpd formats are typescript, tsx, javascript and jsx (.mts/.cts not measured).
  *  - The three types (ConsoleContext, ProcessStatus, LogChunk) stay private; derive them with `Parameters<>`
