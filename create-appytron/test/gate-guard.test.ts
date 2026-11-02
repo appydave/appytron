@@ -133,7 +133,8 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
     'Complexity limits are fixed the same way: a function over cyclomatic 6 (Oxlint `complexity`), cognitive 8 or an expression with more than 3 boolean operators (SonarJS) is split by hand, never suppressed.',
     'Duplicates are fixed the same way: `npm run dup` fails on a block of more than 5 lines and 50 tokens repeated in source, or in tests (judged apart); extract the shared code into one function or helper.',
     'Dead code and cycles are fixed the same way: `npm run deadcode` (Knip, dependency-cruiser) fails on an unused file, export or dependency and on an import cycle; delete the dead code, or break the cycle by moving the shared piece into a third file.',
-    'Parent-relative imports are fixed by alias: a `../` specifier fails lint; write `@shared/x` (src/shared), `@main/x`, `@preload/x`, `@lint/x` or `@root/x` in tests, `@/x` in the renderer. This upgrade replaced electron.vite.config.ts and vitest.config.ts, so re-add any alias of your own there.',
+    'It also fails on a process-boundary import (renderer reaching main, preload or Node; preload reaching anything but src/shared and electron; main reaching the renderer or preload; src/shared reaching anything outside itself): move the shared piece into src/shared.',
+    'Parent-relative imports are fixed by alias: a `../` specifier fails lint; write `@shared/x` (src/shared), `@main/x` (in src/main), `@preload/x` (in src/preload), `@lint/x` or `@root/x` in tests, `@/x` in the renderer. This upgrade replaced electron.vite.config.ts and vitest.config.ts, so re-add any alias of your own there.',
   ])('the ci.yml onWrite row says: %s', (sentence) => {
     const row = CREATE_IF_ABSENT.find((c) => c.to === '.github/workflows/ci.yml')?.onWrite;
     expect(row).toContain(sentence);
@@ -155,6 +156,22 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
     expect(note).toContain('src/main/updater.ts with electron-updater, and src/main/file-author.ts');
   });
 
+  it('the scripts.deadcode note names the process boundaries and what an app with an alias of its own must do', () => {
+    const note = ADDED_ENTRY_NOTES['scripts.deadcode'];
+
+    expect(note).toContain('the renderer imports nothing from src/main or src/preload and no Node or electron');
+    expect(note).toContain('the preload imports only src/shared and electron');
+    expect(note).toContain('src/shared imports nothing outside src/shared (no Node, electron or package)');
+    expect(note).toContain('add it to tsconfig.boundaries.json too');
+  });
+
+  it('the alias list the boundary scan reads is gate-owned, so an upgrade carries it and the aliases in the builds', async () => {
+    await fs.access(resolve(TEMPLATE, 'tsconfig.boundaries.json'));
+    for (const f of ['tsconfig.boundaries.json', 'tsconfig.node.json', 'electron.vite.config.ts', 'lint/root-imports.js']) {
+      expect(classify(f), f).toBe('auto');
+    }
+  });
+
   it('the test type-check is registered: its script and tsconfig travel with an upgrade, and the note says how to wire it', async () => {
     expect(GATE_SCRIPTS).toContain('typecheck:tests');
     await fs.access(resolve(TEMPLATE, 'tsconfig.tests.json'));
@@ -170,7 +187,7 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
   it('the deadcode script, Knip, dependency-cruiser and both configs are registered, so an upgrade carries them', async () => {
     expect(GATE_SCRIPTS).toContain('deadcode');
     expect(GATE_DEV_DEPS).toEqual(expect.arrayContaining(['knip', 'dependency-cruiser']));
-    for (const f of ['knip.json', '.dependency-cruiser.cjs']) {
+    for (const f of ['knip.json', '.dependency-cruiser.cjs', 'tsconfig.boundaries.json']) {
       await fs.access(resolve(TEMPLATE, f));
       expect(classify(f), f).toBe('auto');
     }

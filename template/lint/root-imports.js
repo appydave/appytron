@@ -34,10 +34,16 @@ const NO_ALIAS = `No '../' imports: no root alias resolves in this folder. ${SAM
 const ROOT_IMPORT_SCOPES = [
   { name: 'fallback', files: ['**/*.{ts,tsx,js,mjs,cjs}'], message: NO_ALIAS },
   {
-    name: 'node-source',
-    files: ['src/main/**', 'src/preload/**', 'src/shared/**'],
-    message: alias('@shared/* is src/shared.'),
+    name: 'main',
+    files: ['src/main/**'],
+    message: alias('@main/* is src/main; @shared/* is src/shared.'),
   },
+  {
+    name: 'preload',
+    files: ['src/preload/**'],
+    message: alias('@preload/* is src/preload; @shared/* is src/shared.'),
+  },
+  { name: 'shared', files: ['src/shared/**'], message: alias('@shared/* is src/shared.') },
   {
     name: 'renderer',
     files: ['src/renderer/src/**'],

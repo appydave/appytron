@@ -22,7 +22,7 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "dup": "node lint/no-disable-directives.js && jscpd --config .jscpd.json && jscpd --config .jscpd.tests.json",
-    "deadcode": "node lint/no-disable-directives.js && knip && knip --production --exclude binaries && depcruise -c .dependency-cruiser.cjs --ts-config tsconfig.web.json src lint test vitest.config.ts eslint.config.js electron.vite.config.ts || node lint/deadcode-remedy.js",
+    "deadcode": "node lint/no-disable-directives.js && knip && knip --production --exclude binaries && depcruise -c .dependency-cruiser.cjs --ts-config tsconfig.boundaries.json -T err-long src lint test vitest.config.ts eslint.config.js electron.vite.config.ts || node lint/deadcode-remedy.js",
     "lint": "node lint/no-disable-directives.js && oxlint --deny-warnings --format=default && eslint . --max-warnings 0",
     "format:check": "prettier --check ."
   },

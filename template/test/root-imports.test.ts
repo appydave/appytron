@@ -77,8 +77,18 @@ describe('no parent-relative imports', () => {
   const NONE = `No '../' imports: no root alias resolves in this folder. ${SAME}`;
   const MESSAGES: [string, string[], string][] = [
     [
-      'main, preload and shared',
-      ['src/main/index.ts', 'src/preload/index.ts', 'src/shared/ipc.ts'],
+      'main',
+      ['src/main/index.ts', 'src/main/ipc-router.ts'],
+      `No '../' imports: use a root alias. @main/* is src/main; @shared/* is src/shared. ${SAME}`,
+    ],
+    [
+      'preload',
+      ['src/preload/index.ts', 'src/preload/index.d.ts'],
+      `No '../' imports: use a root alias. @preload/* is src/preload; @shared/* is src/shared. ${SAME}`,
+    ],
+    [
+      'shared',
+      ['src/shared/ipc.ts'],
       `No '../' imports: use a root alias. @shared/* is src/shared. ${SAME}`,
     ],
     [
@@ -126,13 +136,20 @@ describe('the root aliases exist in every place that resolves them', () => {
     JSON.parse(readFileSync(resolve(root, file), 'utf8').replace(/^\s*\/\/.*$/gm, ''))
       .compilerOptions.paths;
 
-  it('@shared is in the main, preload and renderer builds', () => {
-    const shared = { resolve: { alias: { '@shared': dir('src/shared') } } };
+  it('@shared is in the main, preload and renderer builds; @main only in main, @preload only in preload', () => {
+    const shared = { '@shared': dir('src/shared') };
 
-    expect(electronViteConfig).toMatchObject({ main: shared, preload: shared, renderer: shared });
-    expect(electronViteConfig).toMatchObject({
-      renderer: { resolve: { alias: { '@': dir('src/renderer/src') } } },
-    });
+    const aliases = (alias: Record<string, string>) =>
+      expect.objectContaining({ resolve: expect.objectContaining({ alias }) });
+
+    // toEqual on the alias map: an extra alias (@main in the preload) fails as well as a missing one.
+    expect(electronViteConfig).toEqual(
+      expect.objectContaining({
+        main: aliases({ ...shared, '@main': dir('src/main') }),
+        preload: aliases({ ...shared, '@preload': dir('src/preload') }),
+        renderer: aliases({ ...shared, '@': dir('src/renderer/src') }),
+      })
+    );
   });
 
   it('the tests resolve @shared, @main, @preload, @lint and @root', () => {
@@ -146,7 +163,11 @@ describe('the root aliases exist in every place that resolves them', () => {
   });
 
   it('the type checker resolves them too, tests included', () => {
-    expect(tsconfigPaths('tsconfig.node.json')['@shared/*']).toEqual(['src/shared/*']);
+    expect(tsconfigPaths('tsconfig.node.json')).toEqual({
+      '@shared/*': ['src/shared/*'],
+      '@main/*': ['src/main/*'],
+      '@preload/*': ['src/preload/*'],
+    });
     expect(tsconfigPaths('tsconfig.tests.json')).toEqual({
       '@shared/*': ['src/shared/*'],
       '@main/*': ['src/main/*'],
