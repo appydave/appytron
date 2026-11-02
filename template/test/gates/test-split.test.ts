@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { inCopy, SLOW } from './helpers/deadcode';
 import { manifest } from './helpers/manifest';
@@ -13,6 +13,12 @@ const FAILS = "it('fails', () => {\n  expect(1).toBe(2);\n});\n";
 const PASSES = "it('passes', () => {\n  expect(1).toBe(1);\n});\n";
 // Only the planted files are left in the copy, so the run is seconds and cannot start this suite again.
 const ONLY = GATE_TESTS.map((file) => join(GATES, file));
+// The app's own tests, whatever they are: an app adds, renames and deletes these, so nothing below may list them.
+const APP_TESTS = readdirSync(join(root, 'test'), { recursive: true, encoding: 'utf8' })
+  .filter((file) => file.endsWith('.test.ts') && !file.startsWith('gates'))
+  .map((file) => join('test', file));
+// The copy keeps only the planted files: the gate proofs and the app's own tests are both removed.
+const NONE = [...ONLY, ...APP_TESTS];
 const scripts = manifest().scripts;
 
 describe('TS the test scripts', () => {
@@ -24,16 +30,11 @@ describe('TS the test scripts', () => {
     ]);
   });
 
-  it('keep the gate proofs out of test/ itself: every test there is an app test', () => {
-    const appTests = readdirSync(join(root, 'test')).filter((file) => file.endsWith('.test.ts'));
-
-    expect(appTests.sort()).toEqual([
-      'file-author.test.ts',
-      'ipc-router.test.ts',
-      'preload.test.ts',
-      'process-supervisor.test.ts',
-      'public-types.test.ts',
-    ]);
+  it('keep the gate proofs out of test/ itself: no app test is named like one or uses their helpers', () => {
+    expect(APP_TESTS.filter((file) => GATE_TESTS.includes(basename(file)))).toEqual([]);
+    expect(
+      APP_TESTS.filter((file) => readFileSync(join(root, file), 'utf8').includes('gates/helpers'))
+    ).toEqual([]);
   });
 
   it('are run by the shipped CI as two steps, both after typecheck', () => {
@@ -53,7 +54,10 @@ describe('TS what each script runs', () => {
   it(
     'a failing gate proof turns test:gates red and leaves npm test green',
     () => {
-      const change = { remove: ONLY, write: { [join(GATES, 'planted.test.ts')]: FAILS } };
+      const change = {
+        remove: NONE,
+        write: { [join(GATES, 'planted.test.ts')]: FAILS, 'test/planted-app.test.ts': PASSES },
+      };
 
       expect(inCopy(change, ['npm', 'run', 'test:gates']).failed).toBe(true);
       expect(inCopy(change, ['npm', 'test']).failed).toBe(false);
@@ -64,7 +68,7 @@ describe('TS what each script runs', () => {
   it(
     'a failing NEW app test in test/ turns npm test red, and the gate proofs stay green',
     () => {
-      const change = { remove: ONLY, write: { 'test/planted-app.test.ts': FAILS } };
+      const change = { remove: NONE, write: { 'test/planted-app.test.ts': FAILS } };
 
       expect(inCopy(change, ['npm', 'test']).failed).toBe(true);
       expect(inCopy(change, ['npm', 'run', 'test:gates']).output).toContain('No test files found');
@@ -75,11 +79,11 @@ describe('TS what each script runs', () => {
   it(
     'a new passing app test runs under npm test without being listed anywhere, and not under test:gates',
     () => {
-      const change = { remove: ONLY, write: { 'test/planted-app.test.ts': PASSES } };
+      const change = { remove: NONE, write: { 'test/planted-app.test.ts': PASSES } };
       const { failed, output } = inCopy(change, ['npm', 'test']);
 
       expect(failed).toBe(false);
-      expect(output).toContain('Test Files  6 passed (6)');
+      expect(output).toContain('Test Files  1 passed (1)');
       expect(inCopy(change, ['npm', 'run', 'test:gates']).output).not.toContain('planted-app');
     },
     SLOW
