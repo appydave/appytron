@@ -13,8 +13,9 @@ const REMEDY = {
 };
 
 const NOT_ELECTRON = 'node_modules/electron/';
-// The only packages src/shared may import, by name (the single list). Unanchored like NOT_ELECTRON: a symlinked or
-// pnpm node_modules resolves outside the project.
+// The only packages src/shared may import, by name (the single list). Unanchored like NOT_ELECTRON: a pnpm layout
+// nests the package under node_modules/.pnpm/. preserveSymlinks (options) keeps a package linked from outside the
+// project (file:../x) at its node_modules path.
 const SHARED_PACKAGES = ['zod', '@appydave/core'];
 const SHARED_ALLOWED = `node_modules/(${SHARED_PACKAGES.join('|')})/`;
 
@@ -75,5 +76,7 @@ module.exports = {
   options: {
     doNotFollow: { path: 'node_modules' },
     tsPreCompilationDeps: true,
+    // A package linked from outside the project (file:../x, pnpm) keeps its node_modules path, so the allow-list sees it.
+    preserveSymlinks: true,
   },
 };

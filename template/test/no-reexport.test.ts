@@ -61,6 +61,21 @@ const FORBIDDEN_TS: [string, string, string][] = [
     say("imported 'x' exported as default"),
   ],
   [
+    'import x; export default x as unknown as T',
+    "import x from './a';\nexport default x as unknown as number;\n",
+    say("imported 'x' exported as default"),
+  ],
+  [
+    'export type T = ns.Imported',
+    "import type * as ns from './a';\nexport type T = ns.Console;\n",
+    say("type 'T' is an alias of imported 'ns'"),
+  ],
+  [
+    'export type T = a.b.Imported',
+    "import type * as ns from './a';\nexport type T = ns.b.C;\n",
+    say("type 'T' is an alias of imported 'ns'"),
+  ],
+  [
     'import x; export default x satisfies T',
     "import x from './a';\nexport default x satisfies unknown;\n",
     say("imported 'x' exported as default"),
@@ -98,6 +113,16 @@ const FORBIDDEN_TS: [string, string, string][] = [
   ],
 ];
 
+// `<T>x` is a JSX tag in a .tsx file, so it is tried only in the .ts files.
+const FORBIDDEN_ANGLE_CAST: [string, string, string][] = [
+  [
+    'import x; export default <T>x',
+    "import x from './a';\nexport default <unknown>x;\n",
+    say("imported 'x' exported as default"),
+  ],
+];
+const ANGLE_CAST_FILES = TYPESCRIPT_ONLY.filter((file) => !file.endsWith('x'));
+
 // Exports that declare what they export: they must stay allowed.
 const ALLOWED: [string, string][] = [
   ['export const', 'export const a = 1;\n'],
@@ -114,6 +139,16 @@ const ALLOWED: [string, string][] = [
   ],
 ];
 const ALLOWED_TS: [string, string][] = [
+  ['export import C = LocalNs', 'namespace N {}\nexport import C = N;\n'],
+  [
+    'export import C = Local.Member',
+    'namespace N {\n  export namespace M {}\n}\nexport import C = N.M;\n',
+  ],
+  [
+    'export type T<U> = Imported (a generic alias)',
+    "import type { X } from './a';\nexport type T<U> = X;\n",
+  ],
+  ['export type T = ns.Member of a local namespace', 'namespace N {}\nexport type T = N.Member;\n'],
   ['export default of a local, cast', 'const a = 1;\nexport default a as number;\n'],
   ['export type T = a local type', 'type L = number;\nexport type T = L;\n'],
   [
@@ -152,6 +187,15 @@ describe('G16 no re-exports: every form is a finding, in every folder', () => {
     });
   });
 
+  describe.each(ANGLE_CAST_FILES)('in %s (angle-bracket cast)', (file) => {
+    it.each(FORBIDDEN_ANGLE_CAST)(
+      'rejects %s, with its message',
+      async (_name, source, message) => {
+        expect((await hits(source, file)).map((hit) => hit.message)).toEqual([message]);
+      }
+    );
+  });
+
   it('does not see a binding copied through a variable (the documented gap)', async () => {
     const source = "import { x } from './a';\nconst y = x;\nexport { y };\n";
 
@@ -165,6 +209,13 @@ describe('G16 no re-exports: every form is a finding, in every folder', () => {
       "import type { U } from './a';\nexport interface I extends U {}\n",
     ],
     ['a member of an import as default', "import x from './a';\nexport default x.y;\n"],
+    ['typeof an import', "import type { U } from './a';\nexport type T = typeof U;\n"],
+    ['an import() type', "export type T = import('./a').Y;\n"],
+    [
+      'a declared const of typeof an import',
+      "import { U } from './a';\nexport declare const c: typeof U;\n",
+    ],
+    ['an alias of an alias', "import type { U } from './a';\ntype L = U;\nexport type T = L;\n"],
   ])('does not see %s (documented gaps)', async (_name, source) => {
     expect(await hits(source, 'src/main/index.ts')).toEqual([]);
   });

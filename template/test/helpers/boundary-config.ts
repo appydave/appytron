@@ -12,7 +12,11 @@ export interface Rule {
 }
 export interface Config {
   forbidden: Rule[];
-  options: { doNotFollow: { path: string }; tsPreCompilationDeps: boolean };
+  options: {
+    doNotFollow: { path: string };
+    tsPreCompilationDeps: boolean;
+    preserveSymlinks: boolean;
+  };
 }
 
 export const config = (): Config =>
@@ -87,5 +91,9 @@ export const PINNED = {
       to: { pathNot: ['^src/shared/', SHARED_ALLOWED] },
     },
   ],
-  options: { doNotFollow: { path: 'node_modules' }, tsPreCompilationDeps: true },
+  options: {
+    doNotFollow: { path: 'node_modules' },
+    tsPreCompilationDeps: true,
+    preserveSymlinks: true,
+  },
 };

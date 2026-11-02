@@ -266,6 +266,7 @@ describe('G11 the reviewed configuration', () => {
     expect(config.options).toEqual({
       doNotFollow: { path: 'node_modules' },
       tsPreCompilationDeps: true,
+      preserveSymlinks: true,
     });
   });
 
