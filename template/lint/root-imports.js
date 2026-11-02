@@ -32,7 +32,7 @@ const NO_ALIAS = `No '../' imports: no root alias resolves in this folder. ${SAM
 // (tsconfig paths, electron.vite.config.ts, vitest.config.ts). First entry is the fallback for any
 // source file no later entry names; a later entry replaces it for its own files.
 const ROOT_IMPORT_SCOPES = [
-  { name: 'fallback', files: ['**/*.{ts,tsx,js,mjs,cjs}'], message: NO_ALIAS },
+  { name: 'fallback', files: ['**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'], message: NO_ALIAS },
   {
     name: 'main',
     files: ['src/main/**'],

@@ -6,8 +6,9 @@
  * What the gate accepts, so a reader does not hunt for it (all named in knip.json, pinned whole by
  * test/deadcode-gate.test.ts): src/main/updater.ts and electron-updater (the auto-update wiring an app
  * switches on later), and src/main/file-author.ts, a framework primitive no production code calls yet.
- * `ignore` hides that file's own findings (its unused exports too) and nothing it imports. Knip prints one
- * harmless 'Remove from ignore' hint for file-author.ts: only the production pass needs it.
+ * `ignore` hides that file's own findings (its unused exports too) and nothing it imports. The plain Knip pass would
+ * print a 'Remove from ignore' hint for file-author.ts (only the production pass needs it; following it fails that
+ * pass), so that pass runs with --no-config-hints. The production pass still prints its own hints.
  * G12e: dependency-cruiser also holds the process boundaries (.dependency-cruiser.cjs); each finding prints its
  * own remedy under it (err-long). Aliases resolve through tsconfig.boundaries.json, which lists all of them.
  * Not seen: a file outside src/, test/, lint/ and the project root; a specifier built at run time.
@@ -22,6 +23,9 @@
  *    rejects it); ESLint does not refuse `@main` in the renderer (depcruise does).
  *  - src/main may not import src/preload, even for a type: put the shared type in src/shared.
  *  - `upgrade-proof.sh --break` stops at the first lint/ line it removes; CI is the pin for the rest.
+ *  - Extensions: ESLint (every rule block) and the root-import rule cover .ts .tsx .mts .cts .js .jsx .mjs .cjs. Knip's
+ *    root `project` glob is `*.{js,ts,cjs}` and is not widened (an .mjs, .mts or .cts file at the root is invisible to
+ *    it); the jscpd formats are typescript, tsx, javascript and jsx (.mts/.cts not measured).
  *  - The three types (ConsoleContext, ProcessStatus, LogChunk) stay private; derive them with `Parameters<>`
  *    (see lint/exports.js).
  */

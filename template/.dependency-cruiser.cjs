@@ -26,7 +26,7 @@ module.exports = {
       name: 'no-unresolved-import',
       severity: 'error',
       comment:
-        'An import no file answers to is invisible to the boundary rules. Add the alias to tsconfig.boundaries.json (and to the build that uses it), or fix the specifier.',
+        'An import no file answers to is invisible to the boundary rules. Add the alias to tsconfig.boundaries.json (and to the build that uses it), or fix the specifier. An electron subpath (electron/renderer, electron/main) is not an alias: import from electron in main or the preload, and in the renderer ask the main process over IPC through the preload API.',
       from: { path: '^src/' },
       to: { couldNotResolve: true },
     },

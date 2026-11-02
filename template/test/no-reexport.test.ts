@@ -96,6 +96,26 @@ const FORBIDDEN_TS: [string, string, string][] = [
     say("type 'T' is an alias of imported 'U'"),
   ],
   [
+    'export type T = typeof Imported',
+    "import { U } from './a';\nexport type T = typeof U;\n",
+    say("type 'T' is an alias of imported 'typeof U'"),
+  ],
+  [
+    'export type T = import(..).Y',
+    "export type T = import('./a').Y;\n",
+    say("type 'T' is an alias of imported 'import(..)'"),
+  ],
+  [
+    'export declare const c: typeof Imported',
+    "import { U } from './a';\nexport declare const c: typeof U;\n",
+    say("declared 'c' is typeof U"),
+  ],
+  [
+    'type L = Imported; export type T = L',
+    "import type { U } from './a';\ntype L = U;\nexport type T = L;\n",
+    say("type 'T' is an alias of imported 'L'"),
+  ],
+  [
     'export type T = Namespace.Imported',
     "import type * as n from './a';\nexport type T = n;\n",
     say("type 'T' is an alias of imported 'n'"),
@@ -139,6 +159,21 @@ const ALLOWED: [string, string][] = [
   ],
 ];
 const ALLOWED_TS: [string, string][] = [
+  [
+    'export const c: typeof Imported = value (not a declare)',
+    "import { U } from './a';\nexport const c: typeof U = U;\n",
+  ],
+  ['export type T = typeof a local', 'const a = 1;\nexport type T = typeof a;\n'],
+  [
+    'export declare const c: typeof a local',
+    'declare const a: number;\nexport declare const c: typeof a;\n',
+  ],
+  ['export declare const c: a type', "import type { U } from './a';\nexport declare const c: U;\n"],
+  [
+    'export const y = Imported (a variable copy)',
+    "import { x } from './a';\nexport const y = x;\n",
+  ],
+  ['export type T = import(..) used in a union', "export type T = import('./a').Y | null;\n"],
   ['export import C = LocalNs', 'namespace N {}\nexport import C = N;\n'],
   [
     'export import C = Local.Member',
@@ -196,6 +231,15 @@ describe('G16 no re-exports: every form is a finding, in every folder', () => {
     );
   });
 
+  it.each(['src/shared/plant.mts', 'src/main/plant.cts', 'lint/plant.jsx', 'test/plant.mts'])(
+    'is also applied to %s (the extensions TypeScript and JSX add)',
+    async (file) => {
+      const found = await hits("export * from './a';\n", file);
+
+      expect(found.map((hit) => hit.message)).toEqual([say("export * from './a'")]);
+    }
+  );
+
   it('does not see a binding copied through a variable (the documented gap)', async () => {
     const source = "import { x } from './a';\nconst y = x;\nexport { y };\n";
 
@@ -209,13 +253,6 @@ describe('G16 no re-exports: every form is a finding, in every folder', () => {
       "import type { U } from './a';\nexport interface I extends U {}\n",
     ],
     ['a member of an import as default', "import x from './a';\nexport default x.y;\n"],
-    ['typeof an import', "import type { U } from './a';\nexport type T = typeof U;\n"],
-    ['an import() type', "export type T = import('./a').Y;\n"],
-    [
-      'a declared const of typeof an import',
-      "import { U } from './a';\nexport declare const c: typeof U;\n",
-    ],
-    ['an alias of an alias', "import type { U } from './a';\ntype L = U;\nexport type T = L;\n"],
   ])('does not see %s (documented gaps)', async (_name, source) => {
     expect(await hits(source, 'src/main/index.ts')).toEqual([]);
   });

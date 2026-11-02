@@ -28,7 +28,7 @@ export const SHARED_ALLOWED = 'node_modules/(zod|@appydave/core)/';
 // The remedy each rule prints, word for word: a reversed or swapped sentence must fail.
 export const REMEDY = {
   unresolved:
-    'An import no file answers to is invisible to the boundary rules. Add the alias to tsconfig.boundaries.json (and to the build that uses it), or fix the specifier.',
+    'An import no file answers to is invisible to the boundary rules. Add the alias to tsconfig.boundaries.json (and to the build that uses it), or fix the specifier. An electron subpath (electron/renderer, electron/main) is not an alias: import from electron in main or the preload, and in the renderer ask the main process over IPC through the preload API.',
   renderer:
     'The renderer runs in a web page: it has no Node and no Electron. Move the shared piece into src/shared (import it as @shared/x), or ask the main process over IPC through the preload API.',
   preload:

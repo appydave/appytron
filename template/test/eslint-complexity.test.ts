@@ -91,7 +91,7 @@ describe('G06 the reviewed ESLint complexity block', () => {
 
     expect(rest).toEqual({
       name: 'quality/complexity',
-      files: ['**/*.{ts,tsx,js,mjs,cjs}'],
+      files: ['**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'],
       ignores: TEST_FILES,
       rules: {
         [COGNITIVE]: ['error', COGNITIVE_MAX],

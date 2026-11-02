@@ -270,9 +270,20 @@ describe('G11 the reviewed configuration', () => {
     });
   });
 
+  it(
+    'prints no Knip configuration hint on a clean tree (the file-author.ts hint is intended, so it is switched off)',
+    () => {
+      const { failed, output } = deadcode();
+
+      expect(failed).toBe(false);
+      expect(output).not.toContain('Remove from ignore');
+    },
+    SLOW
+  );
+
   it('runs the guard, Knip, Knip on production code, then depcruise over src and lint, and the remedy on failure', () => {
     expect(manifest().scripts.deadcode).toBe(
-      'node lint/no-disable-directives.js && knip && knip --production --exclude binaries && depcruise -c .dependency-cruiser.cjs --ts-config tsconfig.boundaries.json -T err-long src lint test vitest.config.ts eslint.config.js electron.vite.config.ts || node lint/deadcode-remedy.js'
+      'node lint/no-disable-directives.js && knip --no-config-hints && knip --production --exclude binaries && depcruise -c .dependency-cruiser.cjs --ts-config tsconfig.boundaries.json -T err-long src lint test vitest.config.ts eslint.config.js electron.vite.config.ts || node lint/deadcode-remedy.js'
     );
   });
 
