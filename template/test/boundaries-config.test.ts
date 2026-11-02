@@ -19,6 +19,23 @@ describe('G12e the reviewed boundary rules', () => {
     );
   });
 
+  it('tsconfig.boundaries.json resolves the way the builds do: bundler resolution, ESNext, only the alias list', () => {
+    const tsconfig = JSON.parse(readFileSync(join(root, 'tsconfig.boundaries.json'), 'utf8'));
+
+    expect(tsconfig.include).toEqual(['src/shared/**/*']);
+    expect(tsconfig.compilerOptions).toMatchObject({
+      module: 'ESNext',
+      moduleResolution: 'Bundler',
+      baseUrl: '.',
+    });
+    expect(Object.keys(tsconfig.compilerOptions).sort()).toEqual([
+      'baseUrl',
+      'module',
+      'moduleResolution',
+      'paths',
+    ]);
+  });
+
   it('use the alias list of tsconfig.boundaries.json, which agrees with every other place that lists an alias', () => {
     const paths = (file: string): Record<string, string[]> =>
       JSON.parse(readFileSync(join(root, file), 'utf8')).compilerOptions.paths;
