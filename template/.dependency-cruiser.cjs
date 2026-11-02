@@ -9,10 +9,14 @@ const REMEDY = {
     'The preload may import only src/shared (as @shared/x), electron and its own folder. Move the shared piece into src/shared; keep anything that needs Node in src/main and reach it over IPC.',
   main: 'The main process must not import the renderer or the preload. Move the shared piece into src/shared (as @shared/x); the preload is built and loaded as its own entry.',
   shared:
-    'src/shared is imported by main, preload and renderer, so it may import only itself: no Node, no Electron, no package. Keep it to types and plain values.',
+    'src/shared is imported by main, preload and renderer, so it may import only itself and the packages zod and @appydave/core: no Node, no Electron, no other package. Keep it to types and plain values.',
 };
 
 const NOT_ELECTRON = 'node_modules/electron/';
+// The only packages src/shared may import, by name (the single list). Unanchored like NOT_ELECTRON: a symlinked or
+// pnpm node_modules resolves outside the project.
+const SHARED_PACKAGES = ['zod', '@appydave/core'];
+const SHARED_ALLOWED = `node_modules/(${SHARED_PACKAGES.join('|')})/`;
 
 module.exports = {
   forbidden: [
@@ -65,7 +69,7 @@ module.exports = {
       severity: 'error',
       comment: REMEDY.shared,
       from: { path: '^src/shared/' },
-      to: { pathNot: '^src/shared/' },
+      to: { pathNot: ['^src/shared/', SHARED_ALLOWED] },
     },
   ],
   options: {

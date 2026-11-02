@@ -49,6 +49,42 @@ const FORBIDDEN: [string, string, string][] = [
 ];
 // TypeScript-only syntax.
 const FORBIDDEN_TS: [string, string, string][] = [
+  [
+    'export import C = X',
+    "import { X } from './a';\nexport import C = X;\n",
+    say('export import C = ..'),
+  ],
+  ['export import C = require', "export import C = require('./a');\n", say('export import C = ..')],
+  [
+    'import x; export default x as T',
+    "import x from './a';\nexport default x as unknown;\n",
+    say("imported 'x' exported as default"),
+  ],
+  [
+    'import x; export default x satisfies T',
+    "import x from './a';\nexport default x satisfies unknown;\n",
+    say("imported 'x' exported as default"),
+  ],
+  [
+    'import x; export default x!',
+    "import x from './a';\nexport default x!;\n",
+    say("imported 'x' exported as default"),
+  ],
+  [
+    'import x = require; export = x as T',
+    "import x = require('./a');\nexport = x as unknown;\n",
+    say("imported 'x' exported with export ="),
+  ],
+  [
+    'export type T = Imported',
+    "import type { U } from './a';\nexport type T = U;\n",
+    say("type 'T' is an alias of imported 'U'"),
+  ],
+  [
+    'export type T = Namespace.Imported',
+    "import type * as n from './a';\nexport type T = n;\n",
+    say("type 'T' is an alias of imported 'n'"),
+  ],
   ['export type { x } from', "export type { X } from './a';\n", say("export { .. } from './a'")],
   [
     'import type; export type { T }',
@@ -78,6 +114,13 @@ const ALLOWED: [string, string][] = [
   ],
 ];
 const ALLOWED_TS: [string, string][] = [
+  ['export default of a local, cast', 'const a = 1;\nexport default a as number;\n'],
+  ['export type T = a local type', 'type L = number;\nexport type T = L;\n'],
+  [
+    'export type T = a union with an import',
+    "import type { U } from './a';\nexport type T = U | null;\n",
+  ],
+  ['export namespace member alias', 'namespace N {\n  export const a = 1;\n}\nexport { N };\n'],
   ['export type { T } of a local type', 'type T = number;\nexport type { T };\n'],
   ['export interface', 'export interface I {\n  a: number;\n}\n'],
   ['export type', 'export type T = number;\n'],
@@ -112,6 +155,17 @@ describe('G16 no re-exports: every form is a finding, in every folder', () => {
   it('does not see a binding copied through a variable (the documented gap)', async () => {
     const source = "import { x } from './a';\nconst y = x;\nexport { y };\n";
 
+    expect(await hits(source, 'src/main/index.ts')).toEqual([]);
+  });
+
+  it.each([
+    ['a derived type', "import type { U } from './a';\nexport type T = U<number>;\n"],
+    [
+      'an interface extending an import',
+      "import type { U } from './a';\nexport interface I extends U {}\n",
+    ],
+    ['a member of an import as default', "import x from './a';\nexport default x.y;\n"],
+  ])('does not see %s (documented gaps)', async (_name, source) => {
     expect(await hits(source, 'src/main/index.ts')).toEqual([]);
   });
 
