@@ -5,11 +5,12 @@
  * `import x = require(..); export = x`, `export import C = X` and `= require(..)` where X is imported (a local
  * `export import C = LocalNs` is allowed), and `export type T = Imported` or `= ns.Imported` (a bare alias of an
  * imported name or of a member of an imported namespace).
+ * Also caught: `export type T = typeof Imported`, `export type T = import('./x').Y`,
+ * `export declare const c: typeof Imported`, and an alias of such an alias (`type L = Imported; export type T = L`).
  * NOT caught (each is a new declaration or expression, or needs type resolution, so it is an accepted limit):
  * a binding copied through a variable (`const y = x; export { y }`); a derived type
  * (`export type T = Imported<U>`, `export interface I extends Imported {}`); `export default x.y`;
- * `export type T = typeof Imported`; `export type T = import('./x').Y`; `export declare const c: typeof Imported`;
- * and an alias of an alias (`type L = Imported; export type T = L`).
+ * a type reached through a member of a value (`export type T = (typeof Imported)['k']`).
  *
  * A type a public signature uses but its module does not export (ConsoleContext, ProcessStatus, LogChunk,
  * kept private because Knip rejects an unused export and cannot exempt one by name; its JSDoc public tag is
@@ -29,6 +30,10 @@ function importedNames(program) {
     }
 
     if (node.type === 'TSImportEqualsDeclaration') {
+      names.add(node.id.name);
+    }
+
+    if (node.type === 'TSTypeAliasDeclaration' && aliasedImport(node, names) !== undefined) {
       names.add(node.id.name);
     }
   }
@@ -61,17 +66,34 @@ function identifierName(expression) {
   return node.type === 'Identifier' ? node.name : undefined;
 }
 
-/** The imported name a type alias is a bare alias of (no type arguments, no parameters), if any. */
-function aliasedImport(alias, imported) {
-  const target = alias.typeAnnotation;
-
-  if (alias.typeParameters || target.type !== 'TSTypeReference' || target.typeArguments) {
-    return undefined;
+/** The entity a bare type names (`U`, `ns.U`, `typeof U`) with the prefix that prints it, or undefined. */
+function namedEntity(target) {
+  if (target.type === 'TSTypeQuery') {
+    return { entity: target.exprName, prefix: 'typeof ' };
   }
 
-  const name = leftmostName(target.typeName);
+  if (target.type === 'TSTypeReference' && !target.typeArguments) {
+    return { entity: target.typeName, prefix: '' };
+  }
 
-  return name !== undefined && imported.has(name) ? name : undefined;
+  return undefined;
+}
+
+/** What a type names from an import: `U`, `typeof U` or `import(..)`; undefined when it is none of them. */
+function importedType(target, imported) {
+  if (target.type === 'TSImportType') {
+    return 'import(..)';
+  }
+
+  const named = namedEntity(target);
+  const name = named && leftmostName(named.entity);
+
+  return name !== undefined && imported.has(name) ? `${named.prefix}${name}` : undefined;
+}
+
+/** The imported name a type alias is a bare alias of (no type arguments, no parameters), if any. */
+function aliasedImport(alias, imported) {
+  return alias.typeParameters ? undefined : importedType(alias.typeAnnotation, imported);
 }
 
 /** The first identifier of `a`, `a.b` or `a.b.c`. */
@@ -95,23 +117,36 @@ function reportImportEquals(context, node, declaration, imported) {
   }
 }
 
-/** `export type T = Imported` and `export import C = X`: a declaration that only names another module's binding. */
-function reportDeclaration(context, node, imported) {
-  const declaration = node.declaration;
+/** `export declare const c: typeof Imported`: a declaration that only types a value as another module's binding. */
+function reportDeclaredConst(context, node, declaration, imported) {
+  for (const { id } of declaration.declarations) {
+    const name = id.typeAnnotation && importedType(id.typeAnnotation.typeAnnotation, imported);
 
-  if (declaration?.type === 'TSImportEqualsDeclaration') {
-    reportImportEquals(context, node, declaration, imported);
+    if (declaration.declare && name?.startsWith('typeof ')) {
+      say(context, node, `declared '${id.name}' is ${name}`);
+    }
   }
+}
 
-  if (declaration?.type !== 'TSTypeAliasDeclaration') {
-    return;
-  }
-
+function reportAlias(context, node, declaration, imported) {
   const name = aliasedImport(declaration, imported);
 
   if (name !== undefined) {
     say(context, node, `type '${declaration.id.name}' is an alias of imported '${name}'`);
   }
+}
+
+const DECLARATION_REPORTS = {
+  TSImportEqualsDeclaration: reportImportEquals,
+  VariableDeclaration: reportDeclaredConst,
+  TSTypeAliasDeclaration: reportAlias,
+};
+
+/** `export type T = Imported`, `export import C = X` and `export declare const c: typeof X`: a declaration that only names another module's binding. */
+function reportDeclaration(context, node, imported) {
+  const declaration = node.declaration;
+
+  DECLARATION_REPORTS[declaration?.type]?.(context, node, declaration, imported);
 }
 
 const noReexport = {

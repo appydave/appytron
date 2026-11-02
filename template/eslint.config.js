@@ -25,7 +25,7 @@ const NODE = [
 // tsconfig.node.json sees preload/index.ts in place of index.d.ts; tsconfig.web.json sees the .d.ts.
 const PRELOAD_TYPES = ['src/preload/index.d.ts'];
 const RENDERER = ['src/renderer/src/**/*.{ts,tsx}', ...PRELOAD_TYPES];
-const SOURCE = ['**/*.{ts,tsx,js,mjs,cjs}'];
+const SOURCE = ['**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'];
 
 // Type-aware rules need a tsconfig that includes the file, so each environment names its own.
 const typed = ({ name, files, project, extra = [], ignores = [] }) => [

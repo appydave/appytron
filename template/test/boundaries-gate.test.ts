@@ -207,6 +207,23 @@ describe("G12e npm run deadcode fails on each rule and prints that rule's remedy
   );
 });
 
+describe('AF6 an electron subpath is not an alias', () => {
+  it(
+    'electron/renderer in the renderer is reported unresolved, and the remedy says what to do instead',
+    () => {
+      const { failed, output } = deadcode({
+        append: { [FILE.renderer]: "\nimport 'electron/renderer';\n" },
+      });
+
+      expect(failed).toBe(true);
+      expect(output).toContain(`error no-unresolved-import: ${FILE.renderer} `);
+      expect(normal(output)).toContain(REMEDY.unresolved);
+      expect(REMEDY.unresolved).toContain('ask the main process over IPC through the preload API');
+    },
+    SLOW
+  );
+});
+
 describe('G12e what each process may import still passes', () => {
   it(
     'electron and Node in main, electron in the preload, @shared everywhere, a package in the renderer, shared importing shared, zod and @appydave/core',
