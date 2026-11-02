@@ -44,7 +44,7 @@ describe('TS the test scripts', () => {
     expect(steps.slice(-4)).toEqual([
       '      - run: npm run typecheck',
       '      - run: npm test',
-      '      - run: npm run test:gates --if-present',
+      '      - run: npm run test:gates',
       '      - run: npm run build',
     ]);
   });

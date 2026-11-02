@@ -113,6 +113,14 @@ export interface RunUpgradeResult extends ApplyResult {
 const TODO_FILE = 'UPGRADE_TODO.md';
 const TODO_HEADER = '# Upgrade to-do\n\nThe last `appytron-upgrade` left these as you have them:\n\n';
 
+/** The text without the lines that are exactly `line` (and nothing else). */
+function withoutLine(text: string, line: string): string {
+  return text
+    .split('\n')
+    .filter((each) => each !== line)
+    .join('\n');
+}
+
 /**
  * Create-if-absent: write the template's copy only when the app has none. A different copy is the
  * app's own and stays; entries with a `hint` also return a to-do row naming what the template's adds.
@@ -123,9 +131,10 @@ async function createIfAbsent(
 ): Promise<{ written: string[]; rows: string[] }> {
   const written: string[] = [];
   const rows: string[] = [];
-  for (const { from, to, hint, onWrite } of CREATE_IF_ABSENT) {
-    const body = await read(join(templateDir, from));
-    if (body === null) continue;
+  for (const { from, to, hint, onWrite, dropLine } of CREATE_IF_ABSENT) {
+    const template = await read(join(templateDir, from));
+    if (template === null) continue;
+    const body = dropLine === undefined ? template : withoutLine(template, dropLine);
     const current = await read(join(targetDir, to));
     if (current === null) {
       await fs.mkdir(dirname(join(targetDir, to)), { recursive: true });

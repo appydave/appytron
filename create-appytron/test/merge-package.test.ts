@@ -57,6 +57,12 @@ describe('mergeGatePackage', () => {
   });
 });
 
+/** What the upgrade writes for a template file: the same text, except ci.yml loses the test:gates step (the proofs are not carried). */
+async function writtenFor(file: string): Promise<string> {
+  const text = await fs.readFile(join(TEMPLATE, file), 'utf8');
+  return text.split('\n').filter((line) => line !== '      - run: npm run test:gates').join('\n');
+}
+
 describe('runUpgrade: package.json merge, UPGRADE_TODO.md, .gitignore create-if-absent', () => {
   let app: string;
   beforeEach(async () => {
@@ -108,7 +114,7 @@ describe('runUpgrade: package.json merge, UPGRADE_TODO.md, .gitignore create-if-
     const { postinstall, dup, deadcode, 'typecheck:tests': typecheckTests } = JSON.parse(await fs.readFile(join(TEMPLATE, 'package.json'), 'utf8')).scripts;
     await fs.writeFile(join(app, 'package.json'), JSON.stringify({ name: 'old', scripts: { postinstall, dup, deadcode, 'typecheck:tests': typecheckTests } }));
     await fs.mkdir(join(app, '.github/workflows'), { recursive: true });
-    await fs.copyFile(join(TEMPLATE, '.github/workflows/ci.yml'), join(app, '.github/workflows/ci.yml'));
+    await fs.writeFile(join(app, '.github/workflows/ci.yml'), await writtenFor('.github/workflows/ci.yml'));
     await runUpgrade(TEMPLATE, app);
     await expect(fs.access(join(app, 'UPGRADE_TODO.md'))).rejects.toThrow();
   });
@@ -116,7 +122,7 @@ describe('runUpgrade: package.json merge, UPGRADE_TODO.md, .gitignore create-if-
   it.each(['.prettierrc', '.prettierignore', '.github/workflows/ci.yml'])('%s: absent -> written from the template', async (f) => {
     const res = await runUpgrade(TEMPLATE, app);
     expect(res.applied).toContain(f);
-    expect(await fs.readFile(join(app, f), 'utf8')).toBe(await fs.readFile(join(TEMPLATE, f), 'utf8'));
+    expect(await fs.readFile(join(app, f), 'utf8')).toBe(await writtenFor(f));
   });
 
   it('writing ci.yml adds one row naming the fix commands, only when written, never twice', async () => {
@@ -136,7 +142,7 @@ describe('runUpgrade: package.json merge, UPGRADE_TODO.md, .gitignore create-if-
 
   it('an existing identical ci.yml gets no written row', async () => {
     await fs.mkdir(join(app, '.github/workflows'), { recursive: true });
-    await fs.copyFile(join(TEMPLATE, '.github/workflows/ci.yml'), join(app, '.github/workflows/ci.yml'));
+    await fs.writeFile(join(app, '.github/workflows/ci.yml'), await writtenFor('.github/workflows/ci.yml'));
     const res = await runUpgrade(TEMPLATE, app);
     expect(res.todo.filter((r) => r.includes('ci.yml: written'))).toEqual([]);
   });
@@ -153,7 +159,7 @@ describe('runUpgrade: package.json merge, UPGRADE_TODO.md, .gitignore create-if-
 
   it.each(['.prettierrc', '.prettierignore', '.github/workflows/ci.yml'])('%s: present and identical -> nothing', async (f) => {
     await fs.mkdir(dirname(join(app, f)), { recursive: true });
-    await fs.copyFile(join(TEMPLATE, f), join(app, f));
+    await fs.writeFile(join(app, f), await writtenFor(f));
     const res = await runUpgrade(TEMPLATE, app);
     expect(res.applied).not.toContain(f);
     expect(res.todo.filter((r) => r.startsWith(`- ${f}:`))).toEqual([]);
