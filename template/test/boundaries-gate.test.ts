@@ -103,6 +103,9 @@ const CASES: Case[] = [
   ['node:fs in shared', 'shared', "import 'node:fs';", SHARED_RULE],
   ['fs, no node: prefix, in shared', 'shared', "import 'fs';", SHARED_RULE],
   ['a package in shared', 'shared', "import 'zustand';", SHARED_RULE],
+  ['react in shared', 'shared', "import 'react';", SHARED_RULE],
+  ['an electron-only package in shared', 'shared', "import 'electron-updater';", SHARED_RULE],
+  ['a subpath of a package not on the list', 'shared', "import 'zustand/middleware';", SHARED_RULE],
 ];
 
 // Case i is the file `plant-i.ts` beside FILE[from]: its only import is the case's line.
@@ -206,7 +209,7 @@ describe("G12e npm run deadcode fails on each rule and prints that rule's remedy
 
 describe('G12e what each process may import still passes', () => {
   it(
-    'electron and Node in main, electron in the preload, @shared everywhere, a package in the renderer, shared importing shared',
+    'electron and Node in main, electron in the preload, @shared everywhere, a package in the renderer, shared importing shared, zod and @appydave/core',
     () => {
       const { failed, output } = deadcode({
         write: { 'src/shared/more.ts': 'export const more = 1;\n' },
@@ -217,7 +220,8 @@ describe('G12e what each process may import still passes', () => {
             "\nimport type * as e from 'electron';\nimport '@preload/index.d';\nimport type * as s from '@shared/ipc';\n\nexport type Both = [typeof e, typeof s];\n",
           'src/renderer/src/main.tsx':
             "\nimport * as ipc from '@shared/ipc';\nimport '@/store';\n\nvoid ipc;\n",
-          'src/shared/ipc.ts': "\nimport { more } from '@shared/more';\n\nvoid more;\n",
+          'src/shared/ipc.ts':
+            "\nimport { more } from '@shared/more';\nimport { z } from 'zod';\nimport { createStore } from '@appydave/core';\n\nvoid [more, z, createStore];\n",
         },
       });
 

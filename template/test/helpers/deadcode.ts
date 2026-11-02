@@ -7,6 +7,10 @@ const SKIP = new Set(['node_modules', 'out', 'dist', 'coverage', '.git', '.claud
 
 export const SLOW = 60_000;
 
+// The one line a failing `npm run deadcode` ends with, true for all three causes: dead code, a cycle and a process-boundary import.
+export const DEADCODE_REMEDY =
+  'Dead code, a cycle or a process-boundary import: delete the unused file, export or dependency, or use it from production code (a test does not count); break a cycle by moving the shared piece into a third file; a boundary finding prints its own remedy above. Do not add suppression.';
+
 export interface Change {
   write?: Record<string, string>;
   append?: Record<string, string>;

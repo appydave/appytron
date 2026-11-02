@@ -12,12 +12,18 @@ export interface Rule {
 }
 export interface Config {
   forbidden: Rule[];
-  options: { doNotFollow: { path: string }; tsPreCompilationDeps: boolean };
+  options: {
+    doNotFollow: { path: string };
+    tsPreCompilationDeps: boolean;
+    preserveSymlinks: boolean;
+  };
 }
 
 export const config = (): Config =>
   structuredClone(createRequire(import.meta.url)(join(root, '.dependency-cruiser.cjs')));
 export const ELECTRON = 'node_modules/electron/';
+// src/shared may import exactly zod and @appydave/core, and no other package: pinned here as well as in the config.
+export const SHARED_ALLOWED = 'node_modules/(zod|@appydave/core)/';
 
 // The remedy each rule prints, word for word: a reversed or swapped sentence must fail.
 export const REMEDY = {
@@ -29,7 +35,7 @@ export const REMEDY = {
     'The preload may import only src/shared (as @shared/x), electron and its own folder. Move the shared piece into src/shared; keep anything that needs Node in src/main and reach it over IPC.',
   main: 'The main process must not import the renderer or the preload. Move the shared piece into src/shared (as @shared/x); the preload is built and loaded as its own entry.',
   shared:
-    'src/shared is imported by main, preload and renderer, so it may import only itself: no Node, no Electron, no package. Keep it to types and plain values.',
+    'src/shared is imported by main, preload and renderer, so it may import only itself and the packages zod and @appydave/core: no Node, no Electron, no other package. Keep it to types and plain values.',
 };
 
 export const PINNED = {
@@ -82,8 +88,12 @@ export const PINNED = {
       severity: 'error',
       comment: REMEDY.shared,
       from: { path: '^src/shared/' },
-      to: { pathNot: '^src/shared/' },
+      to: { pathNot: ['^src/shared/', SHARED_ALLOWED] },
     },
   ],
-  options: { doNotFollow: { path: 'node_modules' }, tsPreCompilationDeps: true },
+  options: {
+    doNotFollow: { path: 'node_modules' },
+    tsPreCompilationDeps: true,
+    preserveSymlinks: true,
+  },
 };

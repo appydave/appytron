@@ -11,6 +11,19 @@
  * G12e: dependency-cruiser also holds the process boundaries (.dependency-cruiser.cjs); each finding prints its
  * own remedy under it (err-long). Aliases resolve through tsconfig.boundaries.json, which lists all of them.
  * Not seen: a file outside src/, test/, lint/ and the project root; a specifier built at run time.
+ *
+ * Accepted limits (measured, decided, not to be re-found; one list, here):
+ *  - A new top-level folder (such as scripts/) is invisible to Knip: its `project` list is narrow on purpose and is
+ *    not widened, so an orphan file there is not reported. Add the folder to knip.json `project` when you add it.
+ *  - `typecheck:tests` reaches an upgraded app as a script plus a note; the app wires it into its own CI.
+ *  - False alarms in src/renderer: `import 'events'` and `import 'buffer'` (the npm packages of those names) are
+ *    reported as Node core modules; `import 'virtual:x'` (a Vite virtual module) is reported as unresolved.
+ *  - Misses, each caught elsewhere: the renderer may import `@lint/*` and `@root/*` and depcruise lets it (the build
+ *    rejects it); ESLint does not refuse `@main` in the renderer (depcruise does).
+ *  - src/main may not import src/preload, even for a type: put the shared type in src/shared.
+ *  - `upgrade-proof.sh --break` stops at the first lint/ line it removes; CI is the pin for the rest.
+ *  - The three types (ConsoleContext, ProcessStatus, LogChunk) stay private; derive them with `Parameters<>`
+ *    (see lint/exports.js).
  */
 console.error(
   'Dead code, a cycle or a process-boundary import: delete the unused file, export or dependency, or use it from production code (a test does not count); break a cycle by moving the shared piece into a third file; a boundary finding prints its own remedy above. Do not add suppression.'

@@ -161,7 +161,7 @@ describe('gate drift guard: a gate PR registers its files and dependencies in th
 
     expect(note).toContain('the renderer imports nothing from src/main or src/preload and no Node or electron');
     expect(note).toContain('the preload imports only src/shared and electron');
-    expect(note).toContain('src/shared imports nothing outside src/shared (no Node, electron or package)');
+    expect(note).toContain('src/shared imports nothing outside src/shared except the packages zod and @appydave/core (no Node, electron or other package)');
     expect(note).toContain('add it to tsconfig.boundaries.json too');
   });
 

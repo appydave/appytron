@@ -2,7 +2,14 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { type Change, deadcode, inCopy, SLOW } from './helpers/deadcode';
-import { type Config, config, ELECTRON, PINNED, type Rule } from './helpers/boundary-config';
+import {
+  type Config,
+  config,
+  ELECTRON,
+  PINNED,
+  SHARED_ALLOWED,
+  type Rule,
+} from './helpers/boundary-config';
 import { manifest } from './helpers/manifest';
 import { root } from './helpers/scratch';
 
@@ -11,6 +18,27 @@ import { root } from './helpers/scratch';
 describe('G12e the reviewed boundary rules', () => {
   it('are exactly these, every one an error with a remedy written for the reader', () => {
     expect(config()).toEqual(PINNED);
+  });
+
+  it('let src/shared import exactly zod and @appydave/core: the list matches those two packages and nothing near them', () => {
+    const allowed = new RegExp(SHARED_ALLOWED);
+
+    for (const path of [
+      'node_modules/zod/index.js',
+      '../../node_modules/@appydave/core/dist/index.js',
+      'node_modules/.pnpm/zod@4.6.7/node_modules/zod/index.js',
+    ]) {
+      expect(allowed.test(path), path).toBe(true);
+    }
+
+    for (const path of [
+      'node_modules/zustand/index.js',
+      'node_modules/zod-validation/index.js',
+      'node_modules/@appydave/other/index.js',
+      'node_modules/@appydave/core-extra/index.js',
+    ]) {
+      expect(allowed.test(path), path).toBe(false);
+    }
   });
 
   it('are scanned over src, lint, tests and the root configs, with the tsconfig that lists every alias', () => {
@@ -116,6 +144,33 @@ const MUTANTS: Mutant[] = [
     edit: drop('main-imports-renderer-or-preload'),
     file: MAIN,
     line: "import '@preload/index';",
+  },
+  {
+    name: 'shared allow-list grown by one package',
+    edit: (c) => {
+      rule(c, 'shared-imports-outside-shared').to.pathNot = [
+        '^src/shared/',
+        'node_modules/(zod|@appydave/core|zustand)/',
+      ];
+    },
+    file: SHARED,
+    line: "import 'zustand';",
+  },
+  {
+    name: 'shared allow-list is any package',
+    edit: (c) => {
+      rule(c, 'shared-imports-outside-shared').to.pathNot = ['^src/shared/', 'node_modules/'];
+    },
+    file: SHARED,
+    line: "import 'zustand';",
+  },
+  {
+    name: 'shared allow-list lets electron through',
+    edit: (c) => {
+      rule(c, 'shared-imports-outside-shared').to.pathNot = ['^src/shared/', ELECTRON];
+    },
+    file: SHARED,
+    line: "import 'electron';",
   },
   {
     name: 'shared rule dropped',

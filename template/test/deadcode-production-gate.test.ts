@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { type Change, deadcode, SLOW } from './helpers/deadcode';
+import { type Change, DEADCODE_REMEDY, deadcode, SLOW } from './helpers/deadcode';
 import { root } from './helpers/scratch';
 
 // G11 / AF4: the production pass and the remedy line, as `npm run deadcode` runs them.
@@ -90,9 +90,7 @@ describe('G11 the production pass: code only a test uses is dead', () => {
 });
 
 describe('G11 a failing run ends with one line saying what to do', () => {
-  const REMEDY =
-    'Dead code, a cycle or a process-boundary import: delete the unused file, export or dependency, or use it from production code (a test does not count); break a cycle by moving the shared piece into a third file; a boundary finding prints its own remedy above. Do not add suppression.';
-  const count = (text: string) => text.split(REMEDY).length - 1;
+  const count = (text: string) => text.split(DEADCODE_REMEDY).length - 1;
 
   it.each([
     ['an unused file', { write: { 'src/main/orphan.ts': 'export const orphan = 1;\n' } }],
@@ -118,7 +116,7 @@ describe('G11 a failing run ends with one line saying what to do', () => {
 
       expect(failed).toBe(true);
       expect(count(output)).toBe(1);
-      expect(output.trimEnd().endsWith(REMEDY)).toBe(true);
+      expect(output.trimEnd().endsWith(DEADCODE_REMEDY)).toBe(true);
     },
     SLOW
   );

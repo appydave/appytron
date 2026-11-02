@@ -1,8 +1,15 @@
 /**
  * G16 no re-exports: a module may export only what it declares. Caught: export * from,
  * export * as ns from, export { x } from, export type { x } from, `import x; export { x }`,
- * `import x; export default x`, and `import x = require(..); export = x`.
- * NOT caught: a binding copied through a variable (`const y = x; export { y }`).
+ * `import x; export default x` (also `x as T`, `<T>x`, `x satisfies T`, `x!`, nested casts),
+ * `import x = require(..); export = x`, `export import C = X` and `= require(..)` where X is imported (a local
+ * `export import C = LocalNs` is allowed), and `export type T = Imported` or `= ns.Imported` (a bare alias of an
+ * imported name or of a member of an imported namespace).
+ * NOT caught (each is a new declaration or expression, or needs type resolution, so it is an accepted limit):
+ * a binding copied through a variable (`const y = x; export { y }`); a derived type
+ * (`export type T = Imported<U>`, `export interface I extends Imported {}`); `export default x.y`;
+ * `export type T = typeof Imported`; `export type T = import('./x').Y`; `export declare const c: typeof Imported`;
+ * and an alias of an alias (`type L = Imported; export type T = L`).
  *
  * A type a public signature uses but its module does not export (ConsoleContext, ProcessStatus, LogChunk,
  * kept private because Knip rejects an unused export and cannot exempt one by name; its JSDoc public tag is
@@ -36,6 +43,77 @@ function say(context, node, what) {
   });
 }
 
+const WRAPPERS = new Set([
+  'TSAsExpression',
+  'TSTypeAssertion',
+  'TSSatisfiesExpression',
+  'TSNonNullExpression',
+]);
+
+/** The identifier a default export or `export =` is, looking through `as T`, `<T>x`, `satisfies T` and `!`. */
+function identifierName(expression) {
+  let node = expression;
+
+  while (WRAPPERS.has(node.type)) {
+    node = node.expression;
+  }
+
+  return node.type === 'Identifier' ? node.name : undefined;
+}
+
+/** The imported name a type alias is a bare alias of (no type arguments, no parameters), if any. */
+function aliasedImport(alias, imported) {
+  const target = alias.typeAnnotation;
+
+  if (alias.typeParameters || target.type !== 'TSTypeReference' || target.typeArguments) {
+    return undefined;
+  }
+
+  const name = leftmostName(target.typeName);
+
+  return name !== undefined && imported.has(name) ? name : undefined;
+}
+
+/** The first identifier of `a`, `a.b` or `a.b.c`. */
+function leftmostName(entity) {
+  let node = entity;
+
+  while (node.type === 'TSQualifiedName') {
+    node = node.left;
+  }
+
+  return node.type === 'Identifier' ? node.name : undefined;
+}
+
+/** `export import C = X` re-exports only when X is imported (or a require); a local namespace is a declaration. */
+function reportImportEquals(context, node, declaration, imported) {
+  // A require(..) reference has no identifier, so `name` is undefined and it is reported.
+  const name = leftmostName(declaration.moduleReference);
+
+  if (name === undefined || imported.has(name)) {
+    say(context, node, `export import ${declaration.id.name} = ..`);
+  }
+}
+
+/** `export type T = Imported` and `export import C = X`: a declaration that only names another module's binding. */
+function reportDeclaration(context, node, imported) {
+  const declaration = node.declaration;
+
+  if (declaration?.type === 'TSImportEqualsDeclaration') {
+    reportImportEquals(context, node, declaration, imported);
+  }
+
+  if (declaration?.type !== 'TSTypeAliasDeclaration') {
+    return;
+  }
+
+  const name = aliasedImport(declaration, imported);
+
+  if (name !== undefined) {
+    say(context, node, `type '${declaration.id.name}' is an alias of imported '${name}'`);
+  }
+}
+
 const noReexport = {
   meta: { type: 'problem', schema: [] },
   create(context) {
@@ -55,6 +133,8 @@ const noReexport = {
           return;
         }
 
+        reportDeclaration(context, node, imported);
+
         for (const specifier of node.specifiers) {
           if (imported.has(specifier.local.name)) {
             say(context, specifier, `imported '${specifier.local.name}' exported again`);
@@ -62,15 +142,17 @@ const noReexport = {
         }
       },
       ExportDefaultDeclaration(node) {
-        const { declaration } = node;
+        const name = identifierName(node.declaration);
 
-        if (declaration.type === 'Identifier' && imported.has(declaration.name)) {
-          say(context, node, `imported '${declaration.name}' exported as default`);
+        if (name !== undefined && imported.has(name)) {
+          say(context, node, `imported '${name}' exported as default`);
         }
       },
       TSExportAssignment(node) {
-        if (node.expression.type === 'Identifier' && imported.has(node.expression.name)) {
-          say(context, node, `imported '${node.expression.name}' exported with export =`);
+        const name = identifierName(node.expression);
+
+        if (name !== undefined && imported.has(name)) {
+          say(context, node, `imported '${name}' exported with export =`);
         }
       },
     };
